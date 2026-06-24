@@ -3,11 +3,11 @@ import 'package:game_test/features/horror_survival/domain/entities/game_entities
 import 'package:game_test/features/horror_survival/presentation/game/scene/room_factory.dart';
 import 'package:vector_math/vector_math.dart';
 
-/// World-space dimensions and positions for The Mansfield Level 5 floor plan.
+/// World-space dimensions and positions for the Minecraft modern villa map.
 ///
-/// Layout mirrors the official floor plan: northwest wing, diagonal east wing,
-/// southwest cluster, and bottom row with sun deck. All units 501–527 are placed
-/// with sizes matching studio / 1-bedroom / 2-bedroom legend colors.
+/// Layout matches the reference screenshot: a two-story white villa with
+/// dark flat roof, L-shaped pool on the right, garden on the left, exterior
+/// wooden stairs, second-floor terrace, and a large front lawn.
 class BuildingLayout {
   BuildingLayout._();
 
@@ -18,418 +18,112 @@ class BuildingLayout {
   static const double doorThickness = 0.08;
   static const double roomSize = 7.0;
 
-  static const double _studio = 7.0;
-  static const double _oneBrW = 9.0;
-  static const double _oneBrD = 7.0;
-  static const double _twoBrW = 11.0;
-  static const double _twoBrD = 9.0;
-  static const double _corridorW = 3.5;
-  static const double _service = 3.0;
+  /// Full grass field size rendered under the villa.
+  static const double grassFieldSize = 80.0;
 
   static final Vector3 _n = Vector3(0, 0, -1);
   static final Vector3 _s = Vector3(0, 0, 1);
   static final Vector3 _e = Vector3(1, 0, 0);
   static final Vector3 _w = Vector3(-1, 0, 0);
 
-  /// Player spawn in the north corridor near the top elevators.
-  static final Vector3 playerSpawn = Vector3(-8, 0, -32);
+  static final Set<Vector3> _open = {_n, _s, _e, _w};
 
-  /// Every walkable space on the floor.
+  /// Player spawn on the front lawn, low-angle view toward the villa.
+  static final Vector3 playerSpawn = Vector3(-2, 0, 16);
+
+  /// Every walkable segment around and inside the villa.
   static final List<FloorSpace> spaces = [
-    // ── Northwest top row (units 520–517) ──────────────────────────────
-    _unit(
-      RoomId.unit520,
-      UnitType.oneBedroom,
-      Vector3(-45, 0, -38),
-      _oneBrW,
-      _oneBrD,
-      {_s: DoorId.doorUnit520},
-      key: KeyType.unit520,
-    ),
-    _unit(
-      RoomId.unit519,
-      UnitType.oneBedroom,
-      Vector3(-33, 0, -38),
-      _oneBrW,
-      _oneBrD,
-      {_s: DoorId.doorUnit519},
-    ),
-    _unit(
-      RoomId.unit518,
-      UnitType.studio,
-      Vector3(-22, 0, -38),
-      _studio,
-      _studio,
-      {_s: DoorId.doorUnit518},
-    ),
-    _unit(
-      RoomId.unit517,
-      UnitType.oneBedroom,
-      Vector3(-10, 0, -38),
-      _oneBrW,
-      _oneBrD,
-      {_s: DoorId.doorUnit517},
-    ),
+    // ── Front lawn (main outdoor area) ─────────────────────────────────
+    _area(RoomId.lawnFront, 0, 14, 30, 12, UnitType.lawn),
 
-    // ── Northwest second row (521–524) ─────────────────────────────────
-    _unit(
-      RoomId.unit521,
-      UnitType.twoBedroom,
-      Vector3(-45, 0, -26),
-      _twoBrW,
-      _twoBrD,
-      {_n: DoorId.doorUnit521},
-    ),
-    _unit(
-      RoomId.unit522,
-      UnitType.studio,
-      Vector3(-28, 0, -26),
-      _studio,
-      _studio,
-      {_n: DoorId.doorUnit522},
-    ),
-    _unit(
-      RoomId.unit523,
-      UnitType.studio,
-      Vector3(-19, 0, -26),
-      _studio,
-      _studio,
-      {_n: DoorId.doorUnit523},
-    ),
-    _unit(
-      RoomId.unit524,
-      UnitType.oneBedroom,
-      Vector3(-8, 0, -26),
-      _oneBrW,
-      _oneBrD,
-      {_n: DoorId.doorUnit524},
-    ),
+    // ── Wood path to exterior stairs ───────────────────────────────────
+    _area(RoomId.pathToStairs, -6.5, 11, 3, 8, UnitType.path),
 
-    // ── Inner west cluster (525–527) ─────────────────────────────────
-    _unit(
-      RoomId.unit525,
-      UnitType.studio,
-      Vector3(-18, 0, -6),
-      _studio,
-      _studio,
-      {_e: DoorId.doorUnit525},
-    ),
-    _unit(
-      RoomId.unit526,
-      UnitType.studio,
-      Vector3(-18, 0, 2),
-      _studio,
-      _studio,
-      {_e: DoorId.doorUnit526},
-    ),
-    _unit(
-      RoomId.unit527,
-      UnitType.studio,
-      Vector3(-18, 0, 10),
-      _studio,
-      _studio,
-      {_e: DoorId.doorUnit527},
-    ),
+    // ── Garden plot (left) ─────────────────────────────────────────────
+    _area(RoomId.garden, -8, 6, 6, 6, UnitType.lawn, key: KeyType.keyAlpha),
 
-    // ── East diagonal wing (516, 515, 514, 501–505) ───────────────────
-    _unit(
-      RoomId.unit516,
-      UnitType.twoBedroom,
-      Vector3(30, 0, -38),
-      _twoBrW,
-      _twoBrD,
-      {_w: DoorId.doorUnit516},
-    ),
-    _unit(
-      RoomId.unit515,
-      UnitType.twoBedroom,
-      Vector3(30, 0, -26),
-      _twoBrW,
-      _twoBrD,
-      {_w: DoorId.doorUnit515},
-    ),
-    _unit(
-      RoomId.unit514,
-      UnitType.oneBedroom,
-      Vector3(30, 0, -14),
-      _oneBrW,
-      _oneBrD,
-      {_w: DoorId.doorUnit514},
-    ),
-    _unit(
-      RoomId.unit501,
-      UnitType.oneBedroom,
-      Vector3(30, 0, -2),
-      _oneBrW,
-      _oneBrD,
-      {_w: DoorId.doorUnit501},
-    ),
-    _unit(
-      RoomId.unit502,
-      UnitType.studio,
-      Vector3(30, 0, 10),
-      _studio,
-      _studio,
-      {_w: DoorId.doorUnit502},
-    ),
-    _unit(
-      RoomId.unit503,
-      UnitType.studio,
-      Vector3(30, 0, 18),
-      _studio,
-      _studio,
-      {_w: DoorId.doorUnit503},
-    ),
-    _unit(
-      RoomId.unit504,
-      UnitType.studio,
-      Vector3(30, 0, 26),
-      _studio,
-      _studio,
-      {_w: DoorId.doorUnit504},
-    ),
-    _unit(
-      RoomId.unit505,
-      UnitType.twoBedroom,
-      Vector3(30, 0, 36),
-      _twoBrW,
-      _twoBrD,
-      {_w: DoorId.doorUnit505},
-    ),
+    // ── Pool deck (right) ──────────────────────────────────────────────
+    _area(RoomId.poolDeck, 9, 2, 7, 12, UnitType.poolDeck),
 
-    // ── South row (509–513 above corridor, 508/507/506 below) ──────────
-    _unit(
-      RoomId.unit509,
-      UnitType.studio,
-      Vector3(-30, 0, 14),
-      _studio,
-      _studio,
-      {_s: DoorId.doorUnit509},
-    ),
-    _unit(
-      RoomId.unit510,
-      UnitType.studio,
-      Vector3(-20, 0, 14),
-      _studio,
-      _studio,
-      {_s: DoorId.doorUnit510},
-    ),
-    _unit(
-      RoomId.unit511,
-      UnitType.studio,
-      Vector3(-10, 0, 14),
-      _studio,
-      _studio,
-      {_s: DoorId.doorUnit511},
-    ),
-    _unit(
-      RoomId.unit512,
-      UnitType.studio,
-      Vector3(0, 0, 14),
-      _studio,
-      _studio,
-      {_s: DoorId.doorUnit512},
-    ),
-    _unit(
-      RoomId.unit513,
-      UnitType.studio,
-      Vector3(10, 0, 14),
-      _studio,
-      _studio,
-      {_s: DoorId.doorUnit513},
-    ),
-    _unit(
-      RoomId.unit508,
-      UnitType.studio,
-      Vector3(-32, 0, 24),
-      _studio,
-      _studio,
-      {_n: DoorId.doorUnit508},
-    ),
-    _unit(
-      RoomId.unit507,
-      UnitType.studio,
-      Vector3(-22, 0, 24),
-      _studio,
-      _studio,
-      {_n: DoorId.doorUnit507},
-    ),
-    _unit(
-      RoomId.unit506,
-      UnitType.studio,
-      Vector3(-12, 0, 30),
-      _studio,
-      _studio,
-      {_n: DoorId.doorUnit506},
-      key: KeyType.unit506,
-    ),
-
-    // ── Corridors (white paths on the plan) ──────────────────────────
+    // ── Ground floor interior ──────────────────────────────────────────
     FloorSpace(
-      id: RoomId.corridorNorth,
-      center: Vector3(-8, 0, -32),
-      width: 72,
-      depth: _corridorW,
-      unitType: UnitType.corridor,
-      horror: const HorrorProfile(
+      id: RoomId.groundFloor,
+      center: Vector3(0, 0, 0),
+      width: 12,
+      depth: 8,
+      unitType: UnitType.path,
+      openSides: _open,
+      horror: HorrorProfile(
         ambientSound: AudioPaths.ambientCorridor,
-        flickerCount: 4,
-        jumpScareChance: 0.006,
-      ),
-      openSides: {_n, _s, _e, _w},
-    ),
-    FloorSpace(
-      id: RoomId.corridorDiagonal,
-      center: Vector3(18, 0, 0),
-      width: _corridorW,
-      depth: 78,
-      unitType: UnitType.corridor,
-      horror: const HorrorProfile(
-        ambientSound: AudioPaths.ambientCorridor,
-        flickerCount: 3,
-        jumpScareChance: 0.008,
-      ),
-      openSides: {_n, _s, _e, _w},
-    ),
-    FloorSpace(
-      id: RoomId.corridorSouth,
-      center: Vector3(-10, 0, 18),
-      width: 58,
-      depth: _corridorW,
-      unitType: UnitType.corridor,
-      horror: const HorrorProfile(
-        ambientSound: AudioPaths.ambientCorridor,
-        flickerCount: 3,
-        jumpScareChance: 0.006,
-      ),
-      openSides: {_n, _s, _e, _w},
-    ),
-    FloorSpace(
-      id: RoomId.corridorWest,
-      center: Vector3(-12, 0, 2),
-      width: _corridorW,
-      depth: 24,
-      unitType: UnitType.corridor,
-      horror: const HorrorProfile(
-        ambientSound: AudioPaths.ambientCorridor,
-        flickerCount: 2,
-        jumpScareChance: 0.005,
-      ),
-      openSides: {_n, _s, _e, _w},
-    ),
-    FloorSpace(
-      id: RoomId.corridorJunction,
-      center: Vector3(-2, 0, -10),
-      width: 6,
-      depth: 6,
-      unitType: UnitType.corridor,
-      horror: const HorrorProfile(
-        ambientSound: AudioPaths.ambientCorridor,
-        flickerCount: 2,
-        jumpScareChance: 0.007,
-      ),
-      openSides: {_n, _s, _e, _w},
-    ),
-
-    // ── Sun deck (feature 2 on the plan) ───────────────────────────────
-    FloorSpace(
-      id: RoomId.sunDeck,
-      center: Vector3(-42, 0, 32),
-      width: 16,
-      depth: 12,
-      unitType: UnitType.sunDeck,
-      horror: const HorrorProfile(
         flickerCount: 0,
-        jumpScareChance: 0.003,
-        wallBrightness: 0.75,
+        jumpScareChance: 0.01,
       ),
-      openSides: {_n, _e},
     ),
 
-    // ── Elevators (feature 1 on the plan) ──────────────────────────────
+    // ── Exterior stairs (walkable ramp) ────────────────────────────────
+    _area(RoomId.exteriorStairs, -6.5, 5, 3, 8, UnitType.path),
+
+    // ── Second floor terrace ───────────────────────────────────────────
+    _area(RoomId.secondFloorTerrace, 0, 6.5, 14, 3, UnitType.terrace),
+
+    // ── Second floor interior ────────────────────────────────────────────
     FloorSpace(
-      id: RoomId.elevatorTop,
-      center: Vector3(2, 0, -38),
-      width: _service,
-      depth: _service,
-      unitType: UnitType.elevator,
-      horror: const HorrorProfile(flickerCount: 1, jumpScareChance: 0.01),
-      openSides: {_s},
+      id: RoomId.secondFloor,
+      center: Vector3(0, 3, 0),
+      width: 14,
+      depth: 8,
+      unitType: UnitType.path,
+      openSides: _open,
+      horror: HorrorProfile(
+        ambientSound: AudioPaths.ambientWhispers,
+        flickerCount: 1,
+        jumpScareChance: 0.015,
+        keyType: KeyType.keyBeta,
+        keyLocalPosition: Vector3(3, 0, -2),
+      ),
     ),
+
+    // ── Left pergola balcony ───────────────────────────────────────────
+    _area(RoomId.pergolaBalcony, -7.5, -2.5, 4, 4, UnitType.terrace),
+
+    // ── Exit gate at the front entrance ────────────────────────────────
     FloorSpace(
-      id: RoomId.elevatorMid,
-      center: Vector3(22, 0, -8),
-      width: _service,
-      depth: _service,
-      unitType: UnitType.elevator,
-      horror: const HorrorProfile(flickerCount: 1, jumpScareChance: 0.01),
-      openSides: {_w},
-    ),
-    FloorSpace(
-      id: RoomId.elevatorBottom,
-      center: Vector3(2, 0, 30),
-      width: _service,
-      depth: _service,
-      unitType: UnitType.elevator,
-      horror: const HorrorProfile(flickerCount: 1, jumpScareChance: 0.012),
-      openSides: {_n},
+      id: RoomId.frontEntrance,
+      center: Vector3(0, 0, 4),
+      width: 4,
+      depth: 2,
+      unitType: UnitType.exitZone,
       doors: {_s: DoorId.exitElevator},
-    ),
-
-    // ── Stairwells ─────────────────────────────────────────────────────
-    FloorSpace(
-      id: RoomId.stairTop,
-      center: Vector3(6, 0, -38),
-      width: _service,
-      depth: _service,
-      unitType: UnitType.stairwell,
-      horror: const HorrorProfile(flickerCount: 0, jumpScareChance: 0.008),
-      openSides: {_s},
-    ),
-    FloorSpace(
-      id: RoomId.stairMid,
-      center: Vector3(22, 0, -2),
-      width: _service,
-      depth: _service,
-      unitType: UnitType.stairwell,
-      horror: const HorrorProfile(flickerCount: 0, jumpScareChance: 0.008),
-      openSides: {_w},
-    ),
-    FloorSpace(
-      id: RoomId.stairBottom,
-      center: Vector3(-32, 0, 30),
-      width: _service,
-      depth: _service,
-      unitType: UnitType.stairwell,
-      horror: const HorrorProfile(flickerCount: 0, jumpScareChance: 0.008),
-      openSides: {_n},
+      horror: HorrorProfile(
+        ambientSound: AudioPaths.ambientWhispers,
+        flickerCount: 0,
+        jumpScareChance: 0.012,
+      ),
     ),
   ];
 
-  static FloorSpace _unit(
+  static FloorSpace _area(
     RoomId id,
-    UnitType type,
-    Vector3 center,
+    double cx,
+    double cz,
     double width,
     double depth,
-    Map<Vector3, DoorId> doors, {
+    UnitType type, {
     KeyType? key,
   }) {
     return FloorSpace(
       id: id,
-      center: center,
+      center: Vector3(cx, 0, cz),
       width: width,
       depth: depth,
       unitType: type,
-      doors: doors,
+      openSides: type == UnitType.path ? _open : const {},
       horror: HorrorProfile(
-        ambientSound: type == UnitType.twoBedroom
-            ? AudioPaths.ambientWhispers
-            : AudioPaths.ambientCreaking,
-        flickerCount: type == UnitType.studio ? 1 : 2,
-        jumpScareChance: type == UnitType.twoBedroom ? 0.018 : 0.012,
+        ambientSound: AudioPaths.ambientCorridor,
+        flickerCount: 0,
+        jumpScareChance: 0.008,
         keyType: key,
-        keyLocalPosition: key != null ? Vector3(1.5, 0, -1.5) : null,
+        keyLocalPosition: key != null ? Vector3(0, 0, 0) : null,
       ),
     );
   }
@@ -443,19 +137,22 @@ class BuildingLayout {
     return bounds;
   }
 
-  /// Detects which space the player is currently inside.
+  /// Detects which area the player is currently on.
   static RoomId? roomAt(Vector3 position) {
     final p = Vector2(position.x, position.z);
-    RoomId? corridorMatch;
+    RoomId? lawnMatch;
     for (final space in spaces) {
       if (!space.bounds.containsVector2(p)) continue;
-      if (space.unitType == UnitType.corridor) {
-        corridorMatch ??= space.id;
+      if (space.unitType == UnitType.lawn ||
+          space.unitType == UnitType.path ||
+          space.unitType == UnitType.poolDeck ||
+          space.unitType == UnitType.terrace) {
+        lawnMatch ??= space.id;
         continue;
       }
       return space.id;
     }
-    return corridorMatch;
+    return lawnMatch;
   }
 
   /// Converts a [FloorSpace] into a [RoomConfig] for the room factory.
@@ -473,7 +170,7 @@ class BuildingLayout {
   }
 }
 
-/// A single space on The Mansfield floor plan.
+/// A single walkable segment on the villa map.
 class FloorSpace {
   const FloorSpace({
     required this.id,

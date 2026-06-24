@@ -23,12 +23,20 @@ class AppColors {
   static const Color doorBrown = Color(0xFF6B4423);
   static const Color doorBrownDark = Color(0xFF3D2814);
 
-  /// Mansfield floor plan unit colors (from building legend).
-  static const Color unitStudio = Color(0xFF5A5A5A);
-  static const Color unitOneBedroom = Color(0xFFC46B6B);
-  static const Color unitTwoBedroom = Color(0xFF2E3F6E);
-  static const Color corridorFloor = Color(0xFFF0EDE8);
-  static const Color sunDeckFloor = Color(0xFFD4C9A8);
+  /// Scene block palette — used verbatim by unlit 3D materials.
+  static const Color mcGrass = Color(0xFFDD1C1A);
+  static const Color mcWhite = Color(0xFFD4CCC0);
+  static const Color mcDarkGray = Color(0xFF3A3A3A);
+  static const Color mcOakWood = Color(0xFFB8956A);
+  static const Color mcGlass = Color(0xAA8BB8C8);
+  static const Color mcPoolWater = Color(0xCC2B5A8A);
+  static const Color mcCrop = Color(0xFF3D5A32);
+  static const Color mcTreeTrunk = Color(0xFF5C4528);
+  static const Color mcTreeLeaves = Color(0xFF4A5C3A);
+
+  /// Legacy map colors (kept for HUD compatibility).
+  static const Color mapGrass = mcGrass;
+  static const Color mapPath = mcOakWood;
 }
 
 /// Application theme configuration for the horror survival game.

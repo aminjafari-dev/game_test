@@ -1,69 +1,101 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_scene/scene.dart';
 import 'package:game_test/core/theme/app_theme.dart';
 import 'package:game_test/features/horror_survival/domain/entities/game_entities.dart';
 import 'package:vector_math/vector_math.dart';
 
-/// Factory for dark horror-themed PBR and unlit materials.
+/// Factory for block materials used in the modern villa scene.
 ///
-/// Call after [Scene.initializeStaticResources].
-/// Example: `HorrorMaterials.wall()` for room walls.
+/// Uses [UnlitMaterial] so [AppColors] appear exactly as defined — no lighting
+/// brightening or darkening. Call after [Scene.initializeStaticResources].
+/// Example: `HorrorMaterials.whiteConcrete()` for house walls.
 class HorrorMaterials {
   HorrorMaterials._();
 
-  /// Clean white wall material.
-  static PhysicallyBasedMaterial wall({double brightness = 0.95}) {
-    final material = PhysicallyBasedMaterial();
-    material.baseColorFactor = Vector4(brightness, brightness, brightness, 1);
-    material.metallicFactor = 0.0;
-    material.roughnessFactor = 0.85;
+  static Vector4 _color(Color c) => Vector4(c.r, c.g, c.b, c.a);
+
+  /// Builds an unlit material that outputs the exact [color] from [AppColors].
+  static UnlitMaterial _unlit(
+    Color color, {
+    AlphaMode alphaMode = AlphaMode.opaque,
+  }) {
+    final material = UnlitMaterial();
+    material.baseColorFactor = _color(color);
+    material.alphaMode = alphaMode;
     return material;
   }
 
-  /// Light gray floor material.
-  static PhysicallyBasedMaterial floor({double brightness = 0.88}) {
-    final material = PhysicallyBasedMaterial();
-    material.baseColorFactor = Vector4(brightness, brightness, brightness, 1);
-    material.metallicFactor = 0.0;
-    material.roughnessFactor = 0.9;
-    return material;
-  }
+  /// Smooth white concrete / quartz wall blocks.
+  static UnlitMaterial whiteConcrete() => _unlit(AppColors.mcWhite);
 
-  /// Floor color based on Mansfield unit type from the floor plan legend.
-  static PhysicallyBasedMaterial unitFloor(UnitType type) {
+  /// Dark gray flat roof slabs.
+  static UnlitMaterial darkRoof() => _unlit(AppColors.mcDarkGray);
+
+  /// Light oak wood planks for stairs, pergola, and trim.
+  static UnlitMaterial oakWood() => _unlit(AppColors.mcOakWood);
+
+  /// Glass window panes.
+  static UnlitMaterial glass() =>
+      _unlit(AppColors.mcGlass, alphaMode: AlphaMode.blend);
+
+  /// Swimming pool water.
+  static UnlitMaterial poolWater() =>
+      _unlit(AppColors.mcPoolWater, alphaMode: AlphaMode.blend);
+
+  /// Crop rows in the garden plot.
+  static UnlitMaterial crop() => _unlit(AppColors.mcCrop);
+
+  /// Dark gray garden border blocks.
+  static UnlitMaterial darkTrim() => _unlit(AppColors.mcDarkGray);
+
+  /// Oak tree trunk.
+  static UnlitMaterial treeTrunk() => _unlit(AppColors.mcTreeTrunk);
+
+  /// Oak tree leaf canopy.
+  static UnlitMaterial treeLeaves() => _unlit(AppColors.mcTreeLeaves);
+
+  /// Potted plant foliage on the terrace.
+  static UnlitMaterial plantPot() => _unlit(AppColors.mcCrop);
+
+  /// Large grass field under the villa.
+  static UnlitMaterial grass() => _unlit(AppColors.mcGrass);
+
+  /// Floor color based on map segment type.
+  static UnlitMaterial unitFloor(UnitType type) {
     final color = switch (type) {
-      UnitType.studio => AppColors.unitStudio,
-      UnitType.oneBedroom => AppColors.unitOneBedroom,
-      UnitType.twoBedroom => AppColors.unitTwoBedroom,
-      UnitType.corridor => AppColors.corridorFloor,
-      UnitType.sunDeck => AppColors.sunDeckFloor,
-      UnitType.elevator => AppColors.corridorFloor,
-      UnitType.stairwell => AppColors.corridorFloor,
+      UnitType.path => AppColors.mcOakWood,
+      UnitType.exitZone => AppColors.mcWhite,
+      UnitType.lawn => AppColors.mcGrass,
+      UnitType.poolDeck => AppColors.mcWhite,
+      UnitType.terrace => AppColors.mcOakWood,
     };
-    final material = PhysicallyBasedMaterial();
-    material.baseColorFactor = Vector4(
-      color.r,
-      color.g,
-      color.b,
-      color.a,
-    );
-    material.metallicFactor = 0.0;
-    material.roughnessFactor = 0.88;
-    return material;
+    return _unlit(color);
   }
 
-  /// Blood-stained accent material for horror props.
-  static PhysicallyBasedMaterial bloodStain() {
-    final material = PhysicallyBasedMaterial();
-    material.baseColorFactor = Vector4(0.35, 0.05, 0.05, 1);
-    material.metallicFactor = 0.0;
-    material.roughnessFactor = 0.85;
-    return material;
-  }
+  /// Interior ceiling panels.
+  static UnlitMaterial wall() => whiteConcrete();
+
+  /// Interior floors.
+  static UnlitMaterial floor() => whiteConcrete();
 
   /// Emissive flickering ceiling light panel.
   static UnlitMaterial flickerLight({double intensity = 0.9}) {
     final material = UnlitMaterial();
     material.baseColorFactor = Vector4(intensity, intensity * 0.95, 0.7, 1);
+    return material;
+  }
+
+  /// Monster body — dark red silhouette.
+  static UnlitMaterial monster() {
+    final material = UnlitMaterial();
+    material.baseColorFactor = Vector4(0.15, 0.02, 0.02, 1);
+    return material;
+  }
+
+  /// Golden key pickup prop.
+  static UnlitMaterial key() {
+    final material = UnlitMaterial();
+    material.baseColorFactor = Vector4(0.7, 0.55, 0.1, 1);
     return material;
   }
 
@@ -83,36 +115,13 @@ class HorrorMaterials {
     return material;
   }
 
-  /// Monster body — dark red silhouette.
-  static PhysicallyBasedMaterial monster() {
-    final material = PhysicallyBasedMaterial();
-    material.baseColorFactor = Vector4(0.15, 0.02, 0.02, 1);
-    material.emissiveFactor = Vector4(0.3, 0.0, 0.0, 1);
-    material.metallicFactor = 0.2;
-    material.roughnessFactor = 0.8;
-    return material;
-  }
-
-  /// Golden key pickup prop.
-  static PhysicallyBasedMaterial key() {
-    final material = PhysicallyBasedMaterial();
-    material.baseColorFactor = Vector4(0.7, 0.55, 0.1, 1);
-    material.emissiveFactor = Vector4(0.2, 0.15, 0.0, 1);
-    material.metallicFactor = 0.9;
-    material.roughnessFactor = 0.3;
-    return material;
-  }
-
-  /// Wooden door panel — blocks the view when closed.
-  ///
-  /// Colors match [AppColors.doorBrown] and [AppColors.doorBrownDark].
-  static PhysicallyBasedMaterial doorWood({bool locked = false}) {
-    final material = PhysicallyBasedMaterial();
-    material.baseColorFactor = locked
-        ? Vector4(0.24, 0.16, 0.08, 1)
-        : Vector4(0.42, 0.27, 0.14, 1);
-    material.metallicFactor = 0.05;
-    material.roughnessFactor = 0.75;
-    return material;
+  /// Wooden door panel.
+  static UnlitMaterial doorWood({bool locked = false}) {
+    if (locked) {
+      final material = UnlitMaterial();
+      material.baseColorFactor = Vector4(0.24, 0.16, 0.08, 1);
+      return material;
+    }
+    return _unlit(AppColors.mcOakWood);
   }
 }

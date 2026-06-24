@@ -55,17 +55,24 @@ class _HorrorGamePageState extends State<HorrorGamePage> {
     await Scene.initializeStaticResources();
     await _audioManager.init();
 
+    // Unlit scene materials use AppColors directly; keep render settings neutral
+    // so nothing re-brightens or darkens the final image.
     final scene = Scene()
       ..exposure = 1.0
+      ..toneMapping = ToneMappingMode.linear
+      ..environmentIntensity = 0.0
       ..ambientOcclusion.enabled = false
       ..postProcess.vignette.enabled = false
       ..postProcess.filmGrain.enabled = false
-      ..postProcess.bloom.enabled = false
-      ..directionalLight = DirectionalLight(
-        direction: Vector3(-0.3, -1.0, -0.2),
-        color: Vector3(1.0, 1.0, 1.0),
-        intensity: 1.2,
-      );
+      ..postProcess.bloom.enabled = false;
+
+    final skySource = GradientSkySource(
+      zenithColor: Vector3(0.55, 0.55, 0.55),
+      horizonColor: Vector3(0.55, 0.55, 0.55),
+      groundColor: Vector3(0.55, 0.55, 0.55),
+      sunColor: Vector3.zero(),
+    );
+    scene.skybox = Skybox(skySource, intensity: 1.0);
 
     final physicsWorld = BasicPhysicsWorld();
     scene.root.addComponent(physicsWorld);
@@ -79,9 +86,10 @@ class _HorrorGamePageState extends State<HorrorGamePage> {
     final worldBuilder = WorldBuilder(
       roomFactory: roomFactory,
       lightingSystem: lightingSystem,
+      doorSystem: doorSystem,
     );
 
-    final worldNode = worldBuilder.build();
+    final worldNode = await worldBuilder.build();
     scene.add(worldNode);
 
     final playerController = FirstPersonController(
@@ -89,11 +97,12 @@ class _HorrorGamePageState extends State<HorrorGamePage> {
       inputState: _inputState,
       startPosition: BuildingLayout.playerSpawn,
     );
+    playerController.yaw = 3.14159;
     scene.add(playerController.playerNode);
 
     final monsters = <MonsterEntity>[
-      MonsterSpawner.spawn(worldNode, Vector3(30, 0, -26)),
-      MonsterSpawner.spawn(worldNode, Vector3(-20, 0, 14)),
+      MonsterSpawner.spawn(worldNode, Vector3(9, 0, 2)),
+      MonsterSpawner.spawn(worldNode, Vector3(-8, 0, 6)),
     ];
 
     if (!mounted) return;

@@ -14,7 +14,6 @@ class HorrorProfile {
     this.jumpScareChance = 0.015,
     this.keyType,
     this.keyLocalPosition,
-    this.wallBrightness = 0.95,
   });
 
   final String? ambientSound;
@@ -22,7 +21,6 @@ class HorrorProfile {
   final double jumpScareChance;
   final KeyType? keyType;
   final Vector3? keyLocalPosition;
-  final double wallBrightness;
 }
 
 /// Configuration for building a single room node.
@@ -63,17 +61,27 @@ class RoomFactory {
     final roomNode = Node(name: 'room_${config.id.name}')
       ..localTransform = Matrix4.translation(config.center);
 
-    _addFloor(roomNode, config.width, config.depth, config.unitType);
-    _addCeiling(roomNode, config.width, config.depth, config.horror.wallBrightness);
-    _addWalls(roomNode, config);
+    final isOutdoor = config.unitType == UnitType.path ||
+        config.unitType == UnitType.lawn ||
+        config.unitType == UnitType.poolDeck ||
+        config.unitType == UnitType.terrace;
 
-    for (var i = 0; i < config.horror.flickerCount; i++) {
-      final offset = Vector3(
-        (i - config.horror.flickerCount / 2) * 2.0,
-        BuildingLayout.wallHeight - 0.1,
-        0,
-      );
-      lightingSystem.addFlickerLight(roomNode, offset);
+    _addFloor(roomNode, config.width, config.depth, config.unitType, raised: isOutdoor);
+
+    if (!isOutdoor) {
+      _addCeiling(roomNode, config.width, config.depth);
+      _addWalls(roomNode, config);
+    }
+
+    if (!isOutdoor) {
+      for (var i = 0; i < config.horror.flickerCount; i++) {
+        final offset = Vector3(
+          (i - config.horror.flickerCount / 2) * 2.0,
+          BuildingLayout.wallHeight - 0.1,
+          0,
+        );
+        lightingSystem.addFlickerLight(roomNode, offset);
+      }
     }
 
     if (config.horror.keyType != null && config.horror.keyLocalPosition != null) {
@@ -83,9 +91,16 @@ class RoomFactory {
     return roomNode;
   }
 
-  void _addFloor(Node parent, double width, double depth, UnitType unitType) {
+  void _addFloor(
+    Node parent,
+    double width,
+    double depth,
+    UnitType unitType, {
+    bool raised = false,
+  }) {
     final floor = Node(
       name: 'floor',
+      localTransform: raised ? Matrix4.translation(Vector3(0, 0.02, 0)) : null,
       mesh: Mesh(
         PlaneGeometry(width: width, depth: depth),
         HorrorMaterials.unitFloor(unitType),
@@ -94,14 +109,14 @@ class RoomFactory {
     parent.add(floor);
   }
 
-  void _addCeiling(Node parent, double width, double depth, double brightness) {
+  void _addCeiling(Node parent, double width, double depth) {
     final ceiling = Node(
       name: 'ceiling',
       localTransform: Matrix4.translation(Vector3(0, BuildingLayout.wallHeight, 0))
         ..rotateX(3.14159),
       mesh: Mesh(
         PlaneGeometry(width: width, depth: depth),
-        HorrorMaterials.wall(brightness: brightness),
+        HorrorMaterials.wall(),
       ),
     );
     parent.add(ceiling);
@@ -144,18 +159,18 @@ class RoomFactory {
       if (doorId != null) {
         _addWallWithDoor(parent, wall, doorId, config);
       } else {
-        _addSolidWall(parent, wall, config.horror.wallBrightness);
+        _addSolidWall(parent, wall);
       }
     }
   }
 
-  void _addSolidWall(Node parent, _WallSpec wall, double brightness) {
+  void _addSolidWall(Node parent, _WallSpec wall) {
     final wallNode = Node(
       name: 'wall',
       localTransform: Matrix4.translation(wall.pos),
       mesh: Mesh(
         CuboidGeometry(wall.scale),
-        HorrorMaterials.wall(brightness: brightness),
+        HorrorMaterials.wall(),
       ),
     );
     parent.add(wallNode);
@@ -171,14 +186,14 @@ class RoomFactory {
     if (segLen > 0.5) {
       if (isZWall) {
         _addWallSegment(parent, Vector3(-(doorHalf + segLen / 2), wall.pos.y, wall.pos.z),
-            Vector3(segLen, wall.scale.y, wall.scale.z), config.horror.wallBrightness);
+            Vector3(segLen, wall.scale.y, wall.scale.z));
         _addWallSegment(parent, Vector3((doorHalf + segLen / 2), wall.pos.y, wall.pos.z),
-            Vector3(segLen, wall.scale.y, wall.scale.z), config.horror.wallBrightness);
+            Vector3(segLen, wall.scale.y, wall.scale.z));
       } else {
         _addWallSegment(parent, Vector3(wall.pos.x, wall.pos.y, -(doorHalf + segLen / 2)),
-            Vector3(wall.scale.x, wall.scale.y, segLen), config.horror.wallBrightness);
+            Vector3(wall.scale.x, wall.scale.y, segLen));
         _addWallSegment(parent, Vector3(wall.pos.x, wall.pos.y, (doorHalf + segLen / 2)),
-            Vector3(wall.scale.x, wall.scale.y, segLen), config.horror.wallBrightness);
+            Vector3(wall.scale.x, wall.scale.y, segLen));
       }
     }
 
@@ -197,12 +212,12 @@ class RoomFactory {
     );
   }
 
-  void _addWallSegment(Node parent, Vector3 pos, Vector3 scale, double brightness) {
+  void _addWallSegment(Node parent, Vector3 pos, Vector3 scale) {
     final seg = Node(
       localTransform: Matrix4.translation(pos),
       mesh: Mesh(
         CuboidGeometry(scale),
-        HorrorMaterials.wall(brightness: brightness),
+        HorrorMaterials.wall(),
       ),
     );
     parent.add(seg);
