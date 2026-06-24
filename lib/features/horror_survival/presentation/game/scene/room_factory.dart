@@ -151,13 +151,18 @@ class RoomFactory {
   }
 
   void _addSolidWall(Node parent, _WallSpec wall, double brightness) {
+    // Translation-only transform: collider halfExtents already encode size.
+    // Using compose(scale) here double-scales physics and blocks door gaps.
     final wallNode = Node(
       name: 'wall',
-      localTransform: Matrix4.compose(wall.pos, Quaternion.identity(), wall.scale),
-      mesh: Mesh(CuboidGeometry(Vector3(1, 1, 1)), HorrorMaterials.wall(brightness: brightness)),
+      localTransform: Matrix4.translation(wall.pos),
+      mesh: Mesh(
+        CuboidGeometry(wall.scale),
+        HorrorMaterials.wall(brightness: brightness),
+      ),
     );
     parent.add(wallNode);
-    doorSystem.addWallCollider(wallNode, wall.pos + parent.localTransform.getTranslation(), wall.scale);
+    doorSystem.addWallCollider(wallNode, wall.pos, wall.scale);
   }
 
   void _addWallWithDoor(Node parent, _WallSpec wall, DoorId doorId, RoomConfig config) {
@@ -189,14 +194,17 @@ class RoomFactory {
       doorId: doorId,
       doorNode: parent,
       worldPosition: worldDoorPos,
-      rotationAxis: isZWall ? Vector3(0, 1, 0) : Vector3(0, 1, 0),
+      isZWall: isZWall,
     );
   }
 
   void _addWallSegment(Node parent, Vector3 pos, Vector3 scale, double brightness) {
     final seg = Node(
-      localTransform: Matrix4.compose(pos, Quaternion.identity(), scale),
-      mesh: Mesh(CuboidGeometry(Vector3(1, 1, 1)), HorrorMaterials.wall(brightness: brightness)),
+      localTransform: Matrix4.translation(pos),
+      mesh: Mesh(
+        CuboidGeometry(scale),
+        HorrorMaterials.wall(brightness: brightness),
+      ),
     );
     parent.add(seg);
     doorSystem.addWallCollider(seg, pos, scale);
