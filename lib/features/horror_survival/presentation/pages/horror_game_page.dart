@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:game_test/core/audio/audio_manager.dart';
 import 'package:game_test/core/input/input_state.dart';
-import 'package:game_test/core/widgets/g_button.dart';
 import 'package:game_test/core/widgets/g_scaffold.dart';
 import 'package:game_test/core/widgets/g_text.dart';
 import 'package:game_test/features/horror_survival/presentation/game/horror_game_loop.dart';
@@ -13,6 +12,7 @@ import 'package:game_test/features/horror_survival/presentation/game/scene/build
 import 'package:game_test/features/horror_survival/presentation/game/scene/room_factory.dart';
 import 'package:game_test/features/horror_survival/presentation/game/scene/world_builder.dart';
 import 'package:game_test/features/horror_survival/presentation/game/systems/door_system.dart';
+import 'package:game_test/features/horror_survival/presentation/widgets/interact_button.dart';
 import 'package:game_test/features/horror_survival/presentation/game/systems/jump_scare_system.dart';
 import 'package:game_test/features/horror_survival/presentation/game/systems/lighting_system.dart';
 import 'package:game_test/features/horror_survival/presentation/providers/game_provider.dart';
@@ -42,6 +42,7 @@ class _HorrorGamePageState extends State<HorrorGamePage> {
   HorrorGameLoop? _gameLoop;
   bool _ready = false;
   double _totalTime = 0;
+  NearbyInteractable _nearbyInteract = NearbyInteractable.none;
   final Set<LogicalKeyboardKey> _pressedKeys = {};
 
   @override
@@ -55,18 +56,15 @@ class _HorrorGamePageState extends State<HorrorGamePage> {
     await _audioManager.init();
 
     final scene = Scene()
-      ..exposure = 0.35
-      ..ambientOcclusion.enabled = true
-      ..postProcess.vignette.enabled = true
-      ..postProcess.vignette.intensity = 0.6
-      ..postProcess.filmGrain.enabled = true
-      ..postProcess.filmGrain.intensity = 0.25
-      ..postProcess.bloom.enabled = true
-      ..postProcess.bloom.intensity = 0.3
+      ..exposure = 1.0
+      ..ambientOcclusion.enabled = false
+      ..postProcess.vignette.enabled = false
+      ..postProcess.filmGrain.enabled = false
+      ..postProcess.bloom.enabled = false
       ..directionalLight = DirectionalLight(
         direction: Vector3(-0.3, -1.0, -0.2),
-        color: Vector3(0.4, 0.45, 0.55),
-        intensity: 0.8,
+        color: Vector3(1.0, 1.0, 1.0),
+        intensity: 1.2,
       );
 
     final physicsWorld = BasicPhysicsWorld();
@@ -145,6 +143,7 @@ class _HorrorGamePageState extends State<HorrorGamePage> {
       _ready = false;
       _scene = null;
       _totalTime = 0;
+      _nearbyInteract = NearbyInteractable.none;
     });
     _initGame();
   }
@@ -159,11 +158,16 @@ class _HorrorGamePageState extends State<HorrorGamePage> {
     _inputState.setMovement(x: x, z: z);
   }
 
+  void _onInteract() {
+    _gameLoop?.handleInteract();
+    showInteractFeedback(context, _gameLoop?.lastInteractResult);
+  }
+
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     if (event is KeyDownEvent) {
       _pressedKeys.add(event.logicalKey);
       if (event.logicalKey == LogicalKeyboardKey.keyE) {
-        _gameLoop?.handleInteract();
+        _onInteract();
       }
     } else if (event is KeyUpEvent) {
       _pressedKeys.remove(event.logicalKey);
@@ -205,6 +209,10 @@ class _HorrorGamePageState extends State<HorrorGamePage> {
                 _totalTime = elapsed.inMicroseconds / 1e6;
                 _updateKeyboardMovement();
                 _gameLoop!.tick(dt, _totalTime);
+                final nearby = _gameLoop!.nearbyInteract;
+                if (nearby != _nearbyInteract) {
+                  setState(() => _nearbyInteract = nearby);
+                }
               },
             ),
             Positioned.fill(
@@ -218,14 +226,14 @@ class _HorrorGamePageState extends State<HorrorGamePage> {
                 },
               ),
             ),
-            const GameHud(),
+            GameHud(nearbyInteract: _nearbyInteract),
             VirtualJoystick(inputState: _inputState),
             Positioned(
               right: 24,
               bottom: 40,
-              child: GButton(
-                label: l10n.interactButton,
-                onPressed: () => _gameLoop!.handleInteract(),
+              child: InteractButton(
+                nearbyInteract: _nearbyInteract,
+                onPressed: _onInteract,
               ),
             ),
             const JumpScareOverlay(),

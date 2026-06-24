@@ -115,14 +115,62 @@ abstract class AppLocalizations {
   /// Hint for interaction controls
   ///
   /// In en, this message translates to:
-  /// **'Tap INTERACT or press E near doors and items'**
+  /// **'Use the action button when standing next to a door or key'**
   String get interactHint;
 
-  /// Interact button label on mobile HUD
+  /// Generic interact button when nothing is nearby
   ///
   /// In en, this message translates to:
-  /// **'INTERACT'**
+  /// **'Interact'**
   String get interactButton;
+
+  /// Button label when near a key
+  ///
+  /// In en, this message translates to:
+  /// **'Pick Up Key'**
+  String get interactPickUpKey;
+
+  /// Button label when near an unlocked door
+  ///
+  /// In en, this message translates to:
+  /// **'Open Door'**
+  String get interactOpenDoor;
+
+  /// Button label when near exit door with all keys
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Door'**
+  String get interactUnlockDoor;
+
+  /// Button label when near locked door without keys
+  ///
+  /// In en, this message translates to:
+  /// **'Door Locked'**
+  String get interactLockedDoor;
+
+  /// Button label when near open exit door
+  ///
+  /// In en, this message translates to:
+  /// **'Escape!'**
+  String get interactEscape;
+
+  /// Message when interact pressed with nothing in range
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing nearby — walk to a door or key'**
+  String get interactNothingNearby;
+
+  /// Feedback when a door is opened
+  ///
+  /// In en, this message translates to:
+  /// **'Door opened'**
+  String get interactDoorOpened;
+
+  /// Feedback when exit door is unlocked
+  ///
+  /// In en, this message translates to:
+  /// **'Door unlocked and opened'**
+  String get interactDoorUnlocked;
 
   /// Title shown when player health reaches zero
   ///

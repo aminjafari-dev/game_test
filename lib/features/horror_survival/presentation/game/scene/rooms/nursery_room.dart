@@ -15,7 +15,6 @@ class NurseryRoom {
       ambientSound: AudioPaths.ambientWhispers,
       flickerCount: 1,
       jumpScareChance: 0.025,
-      wallDarkness: 0.14,
     ),
     doorDirections: {
       Vector3(-1, 0, 0): DoorId.corridorToNursery,

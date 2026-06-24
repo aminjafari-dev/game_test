@@ -31,9 +31,6 @@ class WorldBuilder {
       world.add(roomFactory.buildRoom(config));
     }
 
-    lightingSystem.addMist(world, Vector3.zero(), 40);
-    lightingSystem.addDustParticles(world, 25);
-
     return world;
   }
 

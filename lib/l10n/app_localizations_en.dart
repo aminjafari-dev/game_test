@@ -22,10 +22,35 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get interactHint => 'Tap INTERACT or press E near doors and items';
+  String get interactHint =>
+      'Use the action button when standing next to a door or key';
 
   @override
-  String get interactButton => 'INTERACT';
+  String get interactButton => 'Interact';
+
+  @override
+  String get interactPickUpKey => 'Pick Up Key';
+
+  @override
+  String get interactOpenDoor => 'Open Door';
+
+  @override
+  String get interactUnlockDoor => 'Unlock Door';
+
+  @override
+  String get interactLockedDoor => 'Door Locked';
+
+  @override
+  String get interactEscape => 'Escape!';
+
+  @override
+  String get interactNothingNearby => 'Nothing nearby — walk to a door or key';
+
+  @override
+  String get interactDoorOpened => 'Door opened';
+
+  @override
+  String get interactDoorUnlocked => 'Door unlocked and opened';
 
   @override
   String get gameOverTitle => 'You Did Not Survive';

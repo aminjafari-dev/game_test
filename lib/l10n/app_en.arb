@@ -25,13 +25,45 @@
       }
     }
   },
-  "interactHint": "Tap INTERACT or press E near doors and items",
+  "interactHint": "Use the action button when standing next to a door or key",
   "@interactHint": {
     "description": "Hint for interaction controls"
   },
-  "interactButton": "INTERACT",
+  "interactButton": "Interact",
   "@interactButton": {
-    "description": "Interact button label on mobile HUD"
+    "description": "Generic interact button when nothing is nearby"
+  },
+  "interactPickUpKey": "Pick Up Key",
+  "@interactPickUpKey": {
+    "description": "Button label when near a key"
+  },
+  "interactOpenDoor": "Open Door",
+  "@interactOpenDoor": {
+    "description": "Button label when near an unlocked door"
+  },
+  "interactUnlockDoor": "Unlock Door",
+  "@interactUnlockDoor": {
+    "description": "Button label when near exit door with all keys"
+  },
+  "interactLockedDoor": "Door Locked",
+  "@interactLockedDoor": {
+    "description": "Button label when near locked door without keys"
+  },
+  "interactEscape": "Escape!",
+  "@interactEscape": {
+    "description": "Button label when near open exit door"
+  },
+  "interactNothingNearby": "Nothing nearby — walk to a door or key",
+  "@interactNothingNearby": {
+    "description": "Message when interact pressed with nothing in range"
+  },
+  "interactDoorOpened": "Door opened",
+  "@interactDoorOpened": {
+    "description": "Feedback when a door is opened"
+  },
+  "interactDoorUnlocked": "Door unlocked and opened",
+  "@interactDoorUnlocked": {
+    "description": "Feedback when exit door is unlocked"
   },
   "gameOverTitle": "You Did Not Survive",
   "@gameOverTitle": {

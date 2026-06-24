@@ -20,7 +20,6 @@ class LibraryRoom {
       jumpScareChance: 0.02,
       keyType: KeyType.library,
       keyLocalPosition: Vector3(2, 0, -2),
-      wallDarkness: 0.1,
     ),
     doorDirections: {
       Vector3(1, 0, 0): DoorId.libraryToKitchen,

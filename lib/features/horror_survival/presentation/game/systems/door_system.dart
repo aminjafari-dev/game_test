@@ -36,6 +36,16 @@ class KeyPickup {
   bool collected = false;
 }
 
+/// What the player can interact with when nearby.
+enum NearbyInteractable {
+  none,
+  key,
+  openDoor,
+  unlockDoor,
+  lockedDoor,
+  escape,
+}
+
 /// Manages doors, wall colliders, and key pickups.
 ///
 /// Example: `doorSystem.tryInteract(playerPosition, gameProvider)`
@@ -91,6 +101,33 @@ class DoorSystem {
       worldPosition: worldPosition,
       node: keyNode,
     ));
+  }
+
+  /// Returns what the player can interact with at [playerPos], without acting.
+  NearbyInteractable peekInteract(Vector3 playerPos, GameProvider game) {
+    for (final key in _keys) {
+      if (key.collected) continue;
+      if (key.worldPosition.distanceTo(playerPos) < 1.5) {
+        return NearbyInteractable.key;
+      }
+    }
+
+    for (final door in _doors) {
+      if (door.worldPosition.distanceTo(playerPos) > 2.0) continue;
+      if (door.isOpen) {
+        if (door.id == DoorId.exitDoor) {
+          return NearbyInteractable.escape;
+        }
+        continue;
+      }
+      if (door.isLocked) {
+        return game.canUnlockDoor(door.id)
+            ? NearbyInteractable.unlockDoor
+            : NearbyInteractable.lockedDoor;
+      }
+      return NearbyInteractable.openDoor;
+    }
+    return NearbyInteractable.none;
   }
 
   /// Attempts interaction near player position within [interactRadius].

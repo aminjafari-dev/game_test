@@ -8,20 +8,20 @@ import 'package:vector_math/vector_math.dart';
 class HorrorMaterials {
   HorrorMaterials._();
 
-  /// Dark concrete wall material.
-  static PhysicallyBasedMaterial wall({double darkness = 0.12}) {
+  /// Clean white wall material.
+  static PhysicallyBasedMaterial wall({double brightness = 0.95}) {
     final material = PhysicallyBasedMaterial();
-    material.baseColorFactor = Vector4(darkness, darkness, darkness + 0.02, 1);
+    material.baseColorFactor = Vector4(brightness, brightness, brightness, 1);
     material.metallicFactor = 0.0;
-    material.roughnessFactor = 0.95;
+    material.roughnessFactor = 0.85;
     return material;
   }
 
-  /// Slightly lighter floor material.
-  static PhysicallyBasedMaterial floor({double darkness = 0.08}) {
+  /// Light gray floor material.
+  static PhysicallyBasedMaterial floor({double brightness = 0.88}) {
     final material = PhysicallyBasedMaterial();
-    material.baseColorFactor = Vector4(darkness, darkness, darkness, 1);
-    material.metallicFactor = 0.1;
+    material.baseColorFactor = Vector4(brightness, brightness, brightness, 1);
+    material.metallicFactor = 0.0;
     material.roughnessFactor = 0.9;
     return material;
   }

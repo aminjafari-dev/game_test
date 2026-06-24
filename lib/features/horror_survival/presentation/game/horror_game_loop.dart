@@ -40,6 +40,9 @@ class HorrorGameLoop {
 
   RoomId? _lastRoom;
   String? _lastInteractResult;
+  NearbyInteractable _nearbyInteract = NearbyInteractable.none;
+
+  NearbyInteractable get nearbyInteract => _nearbyInteract;
 
   static final Map<RoomId, String> _roomAmbient = {
     RoomId.library: AudioPaths.ambientDripping,
@@ -58,6 +61,7 @@ class HorrorGameLoop {
     playerController.tick(dt);
 
     final playerPos = playerController.position;
+    _nearbyInteract = doorSystem.peekInteract(playerPos, gameProvider);
     chaseAi.tick(dt, playerPos, gameProvider);
     lightingSystem.tick(dt, totalTime);
     jumpScareSystem.tick(dt, playerPos);
