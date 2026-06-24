@@ -1,0 +1,36 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "game_test (Android)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--enable-flutter-gpu"
+      ]
+    },
+    {
+      "name": "game_test (iOS)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--enable-flutter-gpu"
+      ]
+    },
+    {
+      "name": "game_test (macOS)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--enable-flutter-gpu",
+        "--enable-impeller"
+      ]
+    },
+    {
+      "name": "game_test (Chrome)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "chrome"
+    }
+  ]
+}

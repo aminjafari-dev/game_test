@@ -1,0 +1,96 @@
+{
+  "@@locale": "en",
+  "appTitle": "Horror Survival",
+  "@appTitle": {
+    "description": "Application title shown in the app bar and launcher"
+  },
+  "healthLabel": "Health: {health}",
+  "@healthLabel": {
+    "description": "HUD label showing current player health",
+    "placeholders": {
+      "health": {
+        "type": "int"
+      }
+    }
+  },
+  "keysLabel": "Keys: {count}/{total}",
+  "@keysLabel": {
+    "description": "HUD label showing collected keys",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "interactHint": "Tap INTERACT or press E near doors and items",
+  "@interactHint": {
+    "description": "Hint for interaction controls"
+  },
+  "interactButton": "INTERACT",
+  "@interactButton": {
+    "description": "Interact button label on mobile HUD"
+  },
+  "gameOverTitle": "You Did Not Survive",
+  "@gameOverTitle": {
+    "description": "Title shown when player health reaches zero"
+  },
+  "gameOverMessage": "The darkness claimed you. Try again.",
+  "@gameOverMessage": {
+    "description": "Message shown on game over screen"
+  },
+  "winTitle": "You Escaped!",
+  "@winTitle": {
+    "description": "Title shown when player escapes the building"
+  },
+  "winMessage": "You unlocked the exit and fled into the night.",
+  "@winMessage": {
+    "description": "Message shown on win screen"
+  },
+  "retryButton": "Try Again",
+  "@retryButton": {
+    "description": "Button to restart the game"
+  },
+  "loadingScene": "Entering the building...",
+  "@loadingScene": {
+    "description": "Loading text while scene initializes"
+  },
+  "roomLibrary": "Library",
+  "@roomLibrary": {
+    "description": "Name of the library room"
+  },
+  "roomKitchen": "Kitchen",
+  "@roomKitchen": {
+    "description": "Name of the kitchen room"
+  },
+  "roomCorridor": "Corridor",
+  "@roomCorridor": {
+    "description": "Name of the main corridor"
+  },
+  "roomNursery": "Nursery",
+  "@roomNursery": {
+    "description": "Name of the nursery room"
+  },
+  "roomBathroom": "Bathroom",
+  "@roomBathroom": {
+    "description": "Name of the bathroom room"
+  },
+  "roomStorage": "Storage",
+  "@roomStorage": {
+    "description": "Name of the storage room"
+  },
+  "roomExitLobby": "Exit Lobby",
+  "@roomExitLobby": {
+    "description": "Name of the exit lobby room"
+  },
+  "doorLocked": "Door is locked. Find more keys.",
+  "@doorLocked": {
+    "description": "Message when player tries locked door without keys"
+  },
+  "keyCollected": "You found a key!",
+  "@keyCollected": {
+    "description": "Snack bar when player collects a key"
+  }
+}
