@@ -155,7 +155,7 @@ class _HorrorGamePageState extends State<HorrorGamePage> {
     if (_pressedKeys.contains(LogicalKeyboardKey.keyD)) x += 1;
     if (_pressedKeys.contains(LogicalKeyboardKey.keyW)) z += 1;
     if (_pressedKeys.contains(LogicalKeyboardKey.keyS)) z -= 1;
-    _inputState.setMovement(x: x, z: z);
+    _inputState.setKeyboardMovement(x: x, z: z);
   }
 
   void _onInteract() {
@@ -215,7 +215,11 @@ class _HorrorGamePageState extends State<HorrorGamePage> {
                 }
               },
             ),
-            Positioned.fill(
+            Positioned(
+              left: MediaQuery.sizeOf(context).width * 0.35,
+              top: 0,
+              right: 0,
+              bottom: 0,
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onPanUpdate: (details) {
