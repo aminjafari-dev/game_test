@@ -77,7 +77,7 @@
   "@winTitle": {
     "description": "Title shown when player escapes the building"
   },
-  "winMessage": "You unlocked the exit and fled into the night.",
+  "winMessage": "You reached the elevator and escaped The Mansfield.",
   "@winMessage": {
     "description": "Message shown on win screen"
   },
@@ -85,37 +85,42 @@
   "@retryButton": {
     "description": "Button to restart the game"
   },
-  "loadingScene": "Entering the building...",
+  "loadingScene": "Entering The Mansfield...",
   "@loadingScene": {
     "description": "Loading text while scene initializes"
   },
-  "roomLibrary": "Library",
-  "@roomLibrary": {
-    "description": "Name of the library room"
+  "buildingName": "The Mansfield — Level 5",
+  "@buildingName": {
+    "description": "Name of the building shown in HUD or title"
   },
-  "roomKitchen": "Kitchen",
-  "@roomKitchen": {
-    "description": "Name of the kitchen room"
+  "buildingAddress": "5100 Wilshire Boulevard, Los Angeles",
+  "@buildingAddress": {
+    "description": "Address of The Mansfield building"
   },
   "roomCorridor": "Corridor",
   "@roomCorridor": {
-    "description": "Name of the main corridor"
+    "description": "Name of a corridor space"
   },
-  "roomNursery": "Nursery",
-  "@roomNursery": {
-    "description": "Name of the nursery room"
+  "roomSunDeck": "5th Floor Sun Deck",
+  "@roomSunDeck": {
+    "description": "Name of the sun deck feature on level 5"
   },
-  "roomBathroom": "Bathroom",
-  "@roomBathroom": {
-    "description": "Name of the bathroom room"
+  "roomElevator": "Elevator",
+  "@roomElevator": {
+    "description": "Name of an elevator shaft"
   },
-  "roomStorage": "Storage",
-  "@roomStorage": {
-    "description": "Name of the storage room"
+  "roomStairwell": "Stairwell",
+  "@roomStairwell": {
+    "description": "Name of a stairwell"
   },
-  "roomExitLobby": "Exit Lobby",
-  "@roomExitLobby": {
-    "description": "Name of the exit lobby room"
+  "unitLabel": "Unit {number}",
+  "@unitLabel": {
+    "description": "Label for an apartment unit number",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
   },
   "doorLocked": "Door is locked. Find more keys.",
   "@doorLocked": {

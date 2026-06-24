@@ -121,7 +121,7 @@ class DoorSystem {
       return;
     }
 
-    final isExit = doorId == DoorId.exitDoor;
+    final isExit = doorId == DoorId.exitElevator;
     _doors[doorId] = DoorState(
       id: doorId,
       worldPositions: [worldPosition],
@@ -264,7 +264,7 @@ class DoorSystem {
     for (final door in _doors.values) {
       if (!_isNearDoor(playerPos, door)) continue;
       if (door.isOpen) {
-        if (door.id == DoorId.exitDoor) {
+        if (door.id == DoorId.exitElevator) {
           return NearbyInteractable.escape;
         }
         continue;
@@ -293,7 +293,7 @@ class DoorSystem {
     for (final door in _doors.values) {
       if (!_isNearDoor(playerPos, door)) continue;
       if (door.isOpen) {
-        if (door.id == DoorId.exitDoor) {
+        if (door.id == DoorId.exitElevator) {
           game.escape();
           return 'escape';
         }

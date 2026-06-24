@@ -193,7 +193,7 @@ abstract class AppLocalizations {
   /// Message shown on win screen
   ///
   /// In en, this message translates to:
-  /// **'You unlocked the exit and fled into the night.'**
+  /// **'You reached the elevator and escaped The Mansfield.'**
   String get winMessage;
 
   /// Button to restart the game
@@ -205,50 +205,50 @@ abstract class AppLocalizations {
   /// Loading text while scene initializes
   ///
   /// In en, this message translates to:
-  /// **'Entering the building...'**
+  /// **'Entering The Mansfield...'**
   String get loadingScene;
 
-  /// Name of the library room
+  /// Name of the building shown in HUD or title
   ///
   /// In en, this message translates to:
-  /// **'Library'**
-  String get roomLibrary;
+  /// **'The Mansfield — Level 5'**
+  String get buildingName;
 
-  /// Name of the kitchen room
+  /// Address of The Mansfield building
   ///
   /// In en, this message translates to:
-  /// **'Kitchen'**
-  String get roomKitchen;
+  /// **'5100 Wilshire Boulevard, Los Angeles'**
+  String get buildingAddress;
 
-  /// Name of the main corridor
+  /// Name of a corridor space
   ///
   /// In en, this message translates to:
   /// **'Corridor'**
   String get roomCorridor;
 
-  /// Name of the nursery room
+  /// Name of the sun deck feature on level 5
   ///
   /// In en, this message translates to:
-  /// **'Nursery'**
-  String get roomNursery;
+  /// **'5th Floor Sun Deck'**
+  String get roomSunDeck;
 
-  /// Name of the bathroom room
+  /// Name of an elevator shaft
   ///
   /// In en, this message translates to:
-  /// **'Bathroom'**
-  String get roomBathroom;
+  /// **'Elevator'**
+  String get roomElevator;
 
-  /// Name of the storage room
+  /// Name of a stairwell
   ///
   /// In en, this message translates to:
-  /// **'Storage'**
-  String get roomStorage;
+  /// **'Stairwell'**
+  String get roomStairwell;
 
-  /// Name of the exit lobby room
+  /// Label for an apartment unit number
   ///
   /// In en, this message translates to:
-  /// **'Exit Lobby'**
-  String get roomExitLobby;
+  /// **'Unit {number}'**
+  String unitLabel(String number);
 
   /// Message when player tries locked door without keys
   ///

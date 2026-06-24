@@ -22,6 +22,13 @@ class AppColors {
   static const Color joystickKnob = Color(0xAAFFFFFF);
   static const Color doorBrown = Color(0xFF6B4423);
   static const Color doorBrownDark = Color(0xFF3D2814);
+
+  /// Mansfield floor plan unit colors (from building legend).
+  static const Color unitStudio = Color(0xFF5A5A5A);
+  static const Color unitOneBedroom = Color(0xFFC46B6B);
+  static const Color unitTwoBedroom = Color(0xFF2E3F6E);
+  static const Color corridorFloor = Color(0xFFF0EDE8);
+  static const Color sunDeckFloor = Color(0xFFD4C9A8);
 }
 
 /// Application theme configuration for the horror survival game.

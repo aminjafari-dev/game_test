@@ -3,12 +3,6 @@ import 'dart:math' as math;
 import 'package:game_test/core/audio/audio_manager.dart';
 import 'package:game_test/features/horror_survival/domain/entities/game_entities.dart';
 import 'package:game_test/features/horror_survival/presentation/game/scene/building_layout.dart';
-import 'package:game_test/features/horror_survival/presentation/game/scene/rooms/bathroom_room.dart';
-import 'package:game_test/features/horror_survival/presentation/game/scene/rooms/exit_lobby_room.dart';
-import 'package:game_test/features/horror_survival/presentation/game/scene/rooms/kitchen_room.dart';
-import 'package:game_test/features/horror_survival/presentation/game/scene/rooms/library_room.dart';
-import 'package:game_test/features/horror_survival/presentation/game/scene/rooms/nursery_room.dart';
-import 'package:game_test/features/horror_survival/presentation/game/scene/rooms/storage_room.dart';
 import 'package:game_test/features/horror_survival/presentation/providers/game_provider.dart';
 import 'package:game_test/features/horror_survival/presentation/game/player/first_person_controller.dart';
 import 'package:vibration/vibration.dart';
@@ -24,8 +18,6 @@ class JumpScareZone {
 }
 
 /// Triggers randomized jump scares when player enters horror zones.
-///
-/// Example: zones registered automatically from room horror profiles.
 class JumpScareSystem {
   JumpScareSystem({
     required this.gameProvider,
@@ -40,26 +32,15 @@ class JumpScareSystem {
   final math.Random _random = math.Random();
   double _scareDisplayTimer = 0;
 
-  /// Registers jump scare zones from all room configs.
+  /// Registers jump scare zones from Mansfield floor plan spaces.
   void registerFromRooms() {
-    final configs = [
-      LibraryRoom.blueprint,
-      KitchenRoom.blueprint,
-      NurseryRoom.blueprint,
-      BathroomRoom.blueprint,
-      StorageRoom.blueprint,
-      ExitLobbyRoom.blueprint,
-    ];
-    for (final config in configs) {
+    for (final space in BuildingLayout.spaces) {
+      if (space.horror.jumpScareChance <= 0) continue;
       _zones.add(JumpScareZone(
-        roomId: config.id,
-        chancePerSecond: config.horror.jumpScareChance,
+        roomId: space.id,
+        chancePerSecond: space.horror.jumpScareChance,
       ));
     }
-    _zones.add(JumpScareZone(
-      roomId: RoomId.corridor,
-      chancePerSecond: 0.008,
-    ));
   }
 
   /// Evaluates jump scare probability each frame.

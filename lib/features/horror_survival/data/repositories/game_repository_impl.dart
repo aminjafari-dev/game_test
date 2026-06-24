@@ -31,7 +31,7 @@ class GameRepositoryImpl implements GameRepository {
 
   @override
   bool canUnlockDoor(DoorId doorId) {
-    if (doorId == DoorId.exitDoor) {
+    if (doorId == DoorId.exitElevator) {
       return _state.playerStats.collectedKeys.length >= GameState.totalKeys;
     }
     return true;

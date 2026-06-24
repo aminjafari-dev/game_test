@@ -92,8 +92,8 @@ class _HorrorGamePageState extends State<HorrorGamePage> {
     scene.add(playerController.playerNode);
 
     final monsters = <MonsterEntity>[
-      MonsterSpawner.spawn(worldNode, Vector3(12, 0, 2)),
-      MonsterSpawner.spawn(worldNode, Vector3(0, 0, -10)),
+      MonsterSpawner.spawn(worldNode, Vector3(30, 0, -26)),
+      MonsterSpawner.spawn(worldNode, Vector3(-20, 0, 14)),
     ];
 
     if (!mounted) return;

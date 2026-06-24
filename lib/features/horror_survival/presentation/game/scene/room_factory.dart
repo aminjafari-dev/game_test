@@ -7,9 +7,6 @@ import 'package:flutter_scene/scene.dart';
 import 'package:vector_math/vector_math.dart';
 
 /// Horror atmosphere profile applied when building a room.
-///
-/// Configure per-room audio, flicker lights, jump scares, and key spawns.
-/// Example: `HorrorProfile(ambientSound: AudioPaths.ambientDripping, flickerCount: 2)`
 class HorrorProfile {
   const HorrorProfile({
     this.ambientSound,
@@ -34,26 +31,24 @@ class RoomConfig {
     required this.id,
     required this.center,
     required this.horror,
-    this.size = BuildingLayout.roomSize,
+    required this.unitType,
+    this.width = BuildingLayout.roomSize,
+    this.depth = BuildingLayout.roomSize,
     this.doorDirections = const {},
+    this.openSides = const {},
   });
 
   final RoomId id;
   final Vector3 center;
   final HorrorProfile horror;
-  final double size;
-  /// Map of wall direction (+X, -X, +Z, -Z as unit vectors) to door presence.
+  final UnitType unitType;
+  final double width;
+  final double depth;
   final Map<Vector3, DoorId?> doorDirections;
+  final Set<Vector3> openSides;
 }
 
 /// Builds procedural room geometry with horror elements.
-///
-/// ## How to extend rooms
-/// 1. Add a [RoomConfig] in [BuildingLayout] or a dedicated room blueprint file.
-/// 2. Set [HorrorProfile] fields: ambient sound, flicker count, jump scare rate, key spawn.
-/// 3. Register the config in [WorldBuilder.buildAllRooms].
-/// 4. Add localized room name to `app_en.arb` if shown in HUD.
-/// 5. Optional: attach `.glb` props via `Node.fromGlbAsset` as child nodes.
 class RoomFactory {
   RoomFactory({
     required this.lightingSystem,
@@ -68,8 +63,8 @@ class RoomFactory {
     final roomNode = Node(name: 'room_${config.id.name}')
       ..localTransform = Matrix4.translation(config.center);
 
-    _addFloor(roomNode, config.size);
-    _addCeiling(roomNode, config.size);
+    _addFloor(roomNode, config.width, config.depth, config.unitType);
+    _addCeiling(roomNode, config.width, config.depth, config.horror.wallBrightness);
     _addWalls(roomNode, config);
 
     for (var i = 0; i < config.horror.flickerCount; i++) {
@@ -88,59 +83,63 @@ class RoomFactory {
     return roomNode;
   }
 
-  void _addFloor(Node parent, double size) {
+  void _addFloor(Node parent, double width, double depth, UnitType unitType) {
     final floor = Node(
       name: 'floor',
       mesh: Mesh(
-        PlaneGeometry(width: size, depth: size),
-        HorrorMaterials.floor(),
+        PlaneGeometry(width: width, depth: depth),
+        HorrorMaterials.unitFloor(unitType),
       ),
     );
     parent.add(floor);
   }
 
-  void _addCeiling(Node parent, double size) {
+  void _addCeiling(Node parent, double width, double depth, double brightness) {
     final ceiling = Node(
       name: 'ceiling',
       localTransform: Matrix4.translation(Vector3(0, BuildingLayout.wallHeight, 0))
         ..rotateX(3.14159),
       mesh: Mesh(
-        PlaneGeometry(width: size, depth: size),
-        HorrorMaterials.wall(brightness: 0.98),
+        PlaneGeometry(width: width, depth: depth),
+        HorrorMaterials.wall(brightness: brightness),
       ),
     );
     parent.add(ceiling);
   }
 
   void _addWalls(Node parent, RoomConfig config) {
-    final half = config.size / 2;
+    final halfW = config.width / 2;
+    final halfD = config.depth / 2;
     final h = BuildingLayout.wallHeight;
     final t = BuildingLayout.wallThickness;
 
     final walls = <_WallSpec>[
       _WallSpec(
-        pos: Vector3(0, h / 2, -half),
-        scale: Vector3(config.size, h, t),
+        pos: Vector3(0, h / 2, -halfD),
+        scale: Vector3(config.width, h, t),
         direction: Vector3(0, 0, -1),
       ),
       _WallSpec(
-        pos: Vector3(0, h / 2, half),
-        scale: Vector3(config.size, h, t),
+        pos: Vector3(0, h / 2, halfD),
+        scale: Vector3(config.width, h, t),
         direction: Vector3(0, 0, 1),
       ),
       _WallSpec(
-        pos: Vector3(-half, h / 2, 0),
-        scale: Vector3(t, h, config.size),
+        pos: Vector3(-halfW, h / 2, 0),
+        scale: Vector3(t, h, config.depth),
         direction: Vector3(-1, 0, 0),
       ),
       _WallSpec(
-        pos: Vector3(half, h / 2, 0),
-        scale: Vector3(t, h, config.size),
+        pos: Vector3(halfW, h / 2, 0),
+        scale: Vector3(t, h, config.depth),
         direction: Vector3(1, 0, 0),
       ),
     ];
 
     for (final wall in walls) {
+      if (config.openSides.contains(wall.direction)) {
+        continue;
+      }
       final doorId = config.doorDirections[wall.direction];
       if (doorId != null) {
         _addWallWithDoor(parent, wall, doorId, config);
@@ -151,8 +150,6 @@ class RoomFactory {
   }
 
   void _addSolidWall(Node parent, _WallSpec wall, double brightness) {
-    // Translation-only transform: collider halfExtents already encode size.
-    // Using compose(scale) here double-scales physics and blocks door gaps.
     final wallNode = Node(
       name: 'wall',
       localTransform: Matrix4.translation(wall.pos),
@@ -196,7 +193,7 @@ class RoomFactory {
       worldPosition: worldDoorPos,
       isZWall: isZWall,
       wallDirection: wall.direction,
-      locked: doorId == DoorId.exitDoor,
+      locked: doorId == DoorId.exitElevator,
     );
   }
 

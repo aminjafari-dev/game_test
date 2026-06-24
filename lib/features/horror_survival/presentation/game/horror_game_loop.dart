@@ -11,8 +11,6 @@ import 'package:game_test/features/horror_survival/presentation/providers/game_p
 import 'package:flutter_scene/scene.dart';
 
 /// Orchestrates all per-frame game systems.
-///
-/// Wired to [SceneView.onTick]. Example: `gameLoop.tick(dt, totalTime)`
 class HorrorGameLoop {
   HorrorGameLoop({
     required this.scene,
@@ -44,15 +42,13 @@ class HorrorGameLoop {
 
   NearbyInteractable get nearbyInteract => _nearbyInteract;
 
-  static final Map<RoomId, String> _roomAmbient = {
-    RoomId.library: AudioPaths.ambientDripping,
-    RoomId.kitchen: AudioPaths.ambientCreaking,
-    RoomId.corridor: AudioPaths.ambientCorridor,
-    RoomId.nursery: AudioPaths.ambientWhispers,
-    RoomId.bathroom: AudioPaths.ambientDripping,
-    RoomId.storage: AudioPaths.ambientCreaking,
-    RoomId.exitLobby: AudioPaths.ambientCorridor,
-  };
+  /// Resolves ambient audio from the current space's horror profile.
+  String? _ambientForRoom(RoomId room) {
+    for (final space in BuildingLayout.spaces) {
+      if (space.id == room) return space.horror.ambientSound;
+    }
+    return AudioPaths.ambientCorridor;
+  }
 
   /// Runs one frame of gameplay logic.
   void tick(double dt, double totalTime) {
@@ -70,7 +66,7 @@ class HorrorGameLoop {
     if (room != null && room != _lastRoom) {
       _lastRoom = room;
       gameProvider.setCurrentRoom(room);
-      final ambient = _roomAmbient[room];
+      final ambient = _ambientForRoom(room);
       if (ambient != null) {
         audioManager.playAmbientLoop(ambient, volume: 0.4);
       }

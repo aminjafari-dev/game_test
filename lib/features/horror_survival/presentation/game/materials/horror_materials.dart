@@ -1,4 +1,6 @@
 import 'package:flutter_scene/scene.dart';
+import 'package:game_test/core/theme/app_theme.dart';
+import 'package:game_test/features/horror_survival/domain/entities/game_entities.dart';
 import 'package:vector_math/vector_math.dart';
 
 /// Factory for dark horror-themed PBR and unlit materials.
@@ -23,6 +25,29 @@ class HorrorMaterials {
     material.baseColorFactor = Vector4(brightness, brightness, brightness, 1);
     material.metallicFactor = 0.0;
     material.roughnessFactor = 0.9;
+    return material;
+  }
+
+  /// Floor color based on Mansfield unit type from the floor plan legend.
+  static PhysicallyBasedMaterial unitFloor(UnitType type) {
+    final color = switch (type) {
+      UnitType.studio => AppColors.unitStudio,
+      UnitType.oneBedroom => AppColors.unitOneBedroom,
+      UnitType.twoBedroom => AppColors.unitTwoBedroom,
+      UnitType.corridor => AppColors.corridorFloor,
+      UnitType.sunDeck => AppColors.sunDeckFloor,
+      UnitType.elevator => AppColors.corridorFloor,
+      UnitType.stairwell => AppColors.corridorFloor,
+    };
+    final material = PhysicallyBasedMaterial();
+    material.baseColorFactor = Vector4(
+      color.r,
+      color.g,
+      color.b,
+      color.a,
+    );
+    material.metallicFactor = 0.0;
+    material.roughnessFactor = 0.88;
     return material;
   }
 
