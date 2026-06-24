@@ -195,6 +195,8 @@ class RoomFactory {
       doorNode: parent,
       worldPosition: worldDoorPos,
       isZWall: isZWall,
+      wallDirection: wall.direction,
+      locked: doorId == DoorId.exitDoor,
     );
   }
 

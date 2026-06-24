@@ -20,6 +20,8 @@ class AppColors {
   static const Color overlayDark = Color(0xCC000000);
   static const Color joystickBase = Color(0x66FFFFFF);
   static const Color joystickKnob = Color(0xAAFFFFFF);
+  static const Color doorBrown = Color(0xFF6B4423);
+  static const Color doorBrownDark = Color(0xFF3D2814);
 }
 
 /// Application theme configuration for the horror survival game.

@@ -11,6 +11,8 @@ class BuildingLayout {
   static const double wallHeight = 3.0;
   static const double wallThickness = 0.2;
   static const double doorWidth = 1.5;
+  static const double doorHeight = 2.4;
+  static const double doorThickness = 0.08;
   static const double corridorSize = 10.0;
 
   /// Room center positions on the XZ plane (Y = 0).

@@ -1,18 +1,35 @@
+import 'dart:math' as math;
+
 import 'package:game_test/features/horror_survival/domain/entities/game_entities.dart';
+import 'package:game_test/features/horror_survival/presentation/game/materials/horror_materials.dart';
 import 'package:game_test/features/horror_survival/presentation/game/scene/building_layout.dart';
 import 'package:game_test/features/horror_survival/presentation/providers/game_provider.dart';
 import 'package:flutter_scene/scene.dart';
 import 'package:vector_math/vector_math.dart';
 
+/// Swinging wooden door panel attached to a hinge node.
+class DoorLeaf {
+  DoorLeaf({
+    required this.hingeNode,
+    required this.hingePosition,
+    required this.openAngleY,
+  });
+
+  final Node hingeNode;
+  final Vector3 hingePosition;
+  final double openAngleY;
+}
+
 /// Door and interactable state in the 3D world.
 ///
 /// A single logical door can span two room walls, so it may have multiple
-/// interaction points and physics blockers that all open together.
+/// interaction points, physics blockers, and visible panels that open together.
 class DoorState {
   DoorState({
     required this.id,
     required this.worldPositions,
     required this.blockers,
+    required this.leaves,
     this.isOpen = false,
     this.isLocked = false,
     this.requiredKeys = 0,
@@ -21,6 +38,7 @@ class DoorState {
   final DoorId id;
   final List<Vector3> worldPositions;
   final List<Node> blockers;
+  final List<DoorLeaf> leaves;
   bool isOpen;
   bool isLocked;
   final int requiredKeys;
@@ -64,6 +82,7 @@ class DoorSystem {
     required Node doorNode,
     required Vector3 worldPosition,
     required bool isZWall,
+    required Vector3 wallDirection,
     bool locked = false,
   }) {
     final roomOrigin = doorNode.localTransform.getTranslation();
@@ -71,7 +90,6 @@ class DoorSystem {
 
     final doorHalf = BuildingLayout.doorWidth / 2;
     const wallHalf = 0.1;
-    // Align the thin axis with the wall normal so the blocker sits in the doorway.
     final halfExtents = isZWall
         ? Vector3(doorHalf, 1.2, wallHalf)
         : Vector3(wallHalf, 1.2, doorHalf);
@@ -86,10 +104,20 @@ class DoorSystem {
     )..addComponent(blocker);
     doorNode.add(blockerNode);
 
+    final leaf = _createDoorLeaf(
+      doorId: doorId,
+      localCenter: localPos,
+      isZWall: isZWall,
+      wallDirection: wallDirection,
+      locked: locked,
+    );
+    doorNode.add(leaf.hingeNode);
+
     final existing = _doors[doorId];
     if (existing != null) {
       existing.worldPositions.add(worldPosition);
       existing.blockers.add(blockerNode);
+      existing.leaves.add(leaf);
       return;
     }
 
@@ -98,9 +126,98 @@ class DoorSystem {
       id: doorId,
       worldPositions: [worldPosition],
       blockers: [blockerNode],
+      leaves: [leaf],
       isLocked: isExit,
       requiredKeys: isExit ? GameState.totalKeys : 0,
     );
+  }
+
+  DoorLeaf _createDoorLeaf({
+    required DoorId doorId,
+    required Vector3 localCenter,
+    required bool isZWall,
+    required Vector3 wallDirection,
+    required bool locked,
+  }) {
+    final doorHalf = BuildingLayout.doorWidth / 2;
+    final doorHeight = BuildingLayout.doorHeight;
+    final doorThickness = BuildingLayout.doorThickness;
+
+    final panelSize = isZWall
+        ? Vector3(doorHalf * 2, doorHeight, doorThickness)
+        : Vector3(doorThickness, doorHeight, doorHalf * 2);
+
+    final visualCenter = Vector3(
+      localCenter.x,
+      doorHeight / 2,
+      localCenter.z,
+    );
+
+    final hingePosition = _hingePosition(
+      visualCenter,
+      doorHalf,
+      isZWall,
+      wallDirection,
+    );
+    final panelOffset = _panelOffset(doorHalf, isZWall, wallDirection);
+    final openAngleY = _openAngleY(wallDirection);
+
+    final hingeNode = Node(name: 'door_hinge_${doorId.name}');
+    hingeNode.localTransform = Matrix4.translation(hingePosition);
+
+    final panelNode = Node(
+      name: 'door_panel',
+      localTransform: Matrix4.translation(panelOffset),
+      mesh: Mesh(
+        CuboidGeometry(panelSize),
+        HorrorMaterials.doorWood(locked: locked),
+      ),
+    );
+    hingeNode.add(panelNode);
+
+    return DoorLeaf(
+      hingeNode: hingeNode,
+      hingePosition: hingePosition,
+      openAngleY: openAngleY,
+    );
+  }
+
+  Vector3 _hingePosition(
+    Vector3 center,
+    double doorHalf,
+    bool isZWall,
+    Vector3 wallDirection,
+  ) {
+    if (isZWall) {
+      final hingeOnPositiveX = wallDirection.z > 0;
+      return Vector3(
+        center.x + (hingeOnPositiveX ? doorHalf : -doorHalf),
+        center.y,
+        center.z,
+      );
+    }
+    final hingeOnPositiveZ = wallDirection.x > 0;
+    return Vector3(
+      center.x,
+      center.y,
+      center.z + (hingeOnPositiveZ ? doorHalf : -doorHalf),
+    );
+  }
+
+  Vector3 _panelOffset(double doorHalf, bool isZWall, Vector3 wallDirection) {
+    if (isZWall) {
+      final offsetX = wallDirection.z > 0 ? -doorHalf : doorHalf;
+      return Vector3(offsetX, 0, 0);
+    }
+    final offsetZ = wallDirection.x > 0 ? -doorHalf : doorHalf;
+    return Vector3(0, 0, offsetZ);
+  }
+
+  double _openAngleY(Vector3 wallDirection) {
+    if (wallDirection.x > 0.5) return -math.pi / 2;
+    if (wallDirection.x < -0.5) return math.pi / 2;
+    if (wallDirection.z > 0.5) return math.pi / 2;
+    return -math.pi / 2;
   }
 
   void addWallCollider(Node wallNode, Vector3 localPos, Vector3 scale) {
@@ -124,7 +241,6 @@ class DoorSystem {
     ));
   }
 
-  /// Horizontal distance from player feet to a door interaction point.
   bool _isNearDoor(Vector3 playerPos, DoorState door) {
     final radiusSq = _interactRadius * _interactRadius;
     for (final doorPos in door.worldPositions) {
@@ -137,7 +253,6 @@ class DoorSystem {
     return false;
   }
 
-  /// Returns what the player can interact with at [playerPos], without acting.
   NearbyInteractable peekInteract(Vector3 playerPos, GameProvider game) {
     for (final key in _keys) {
       if (key.collected) continue;
@@ -164,7 +279,6 @@ class DoorSystem {
     return NearbyInteractable.none;
   }
 
-  /// Attempts interaction near player position within [_interactRadius].
   String? tryInteract(Vector3 playerPos, GameProvider game) {
     for (final key in _keys) {
       if (key.collected) continue;
@@ -204,6 +318,10 @@ class DoorSystem {
 
   void _openDoor(DoorState door) {
     door.isOpen = true;
+    for (final leaf in door.leaves) {
+      leaf.hingeNode.localTransform = Matrix4.translation(leaf.hingePosition)
+        ..rotateY(leaf.openAngleY);
+    }
     for (final blocker in door.blockers) {
       blocker.parent?.remove(blocker);
     }

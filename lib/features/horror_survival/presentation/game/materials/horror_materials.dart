@@ -77,4 +77,17 @@ class HorrorMaterials {
     material.roughnessFactor = 0.3;
     return material;
   }
+
+  /// Wooden door panel — blocks the view when closed.
+  ///
+  /// Colors match [AppColors.doorBrown] and [AppColors.doorBrownDark].
+  static PhysicallyBasedMaterial doorWood({bool locked = false}) {
+    final material = PhysicallyBasedMaterial();
+    material.baseColorFactor = locked
+        ? Vector4(0.24, 0.16, 0.08, 1)
+        : Vector4(0.42, 0.27, 0.14, 1);
+    material.metallicFactor = 0.05;
+    material.roughnessFactor = 0.75;
+    return material;
+  }
 }
