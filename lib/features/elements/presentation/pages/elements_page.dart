@@ -32,6 +32,7 @@ class _ElementsPageState extends State<ElementsPage> {
   Offset? _gestureStart;
   Offset? _lastFocalPoint;
   double _pinchStartDistance = 0;
+  Vector3? _pinchStartTarget;
   static const double _tapSlop = 12;
 
   @override
@@ -87,6 +88,12 @@ class _ElementsPageState extends State<ElementsPage> {
     );
     world.add(cutSheet.root);
 
+    final templateAssembly = HalloweenCoffinPiecesBuilder.buildAssembled(
+      material: woodMaterial,
+      baseMaterial: HorrorMaterials.coffinBaseBlack(),
+    );
+    world.add(templateAssembly.root);
+
     scene.add(world);
 
     if (!mounted) return;
@@ -115,12 +122,19 @@ class _ElementsPageState extends State<ElementsPage> {
     _gestureStart = details.localFocalPoint;
     _lastFocalPoint = details.localFocalPoint;
     _pinchStartDistance = _camera.distance;
+    _pinchStartTarget = _camera.target.clone();
   }
 
-  void _onScaleUpdate(ScaleUpdateDetails details) {
+  void _onScaleUpdate(ScaleUpdateDetails details, Size viewSize) {
     _lastFocalPoint = details.localFocalPoint;
-    if (details.scale != 1.0) {
-      _camera.zoomFromPinch(_pinchStartDistance, details.scale);
+    if (details.scale != 1.0 && _pinchStartTarget != null) {
+      _camera.zoomFromPinchAt(
+        startDistance: _pinchStartDistance,
+        scale: details.scale,
+        startTarget: _pinchStartTarget!,
+        focalPoint: details.localFocalPoint,
+        viewSize: viewSize,
+      );
     }
     if (details.focalPointDelta != Offset.zero) {
       _camera.orbit(details.focalPointDelta.dx, details.focalPointDelta.dy);
@@ -150,18 +164,27 @@ class _ElementsPageState extends State<ElementsPage> {
           return Listener(
             onPointerSignal: (event) {
               if (event is PointerScrollEvent) {
-                _camera.zoomFromScroll(event.scrollDelta.dy);
+                final box = context.findRenderObject() as RenderBox?;
+                final localPosition = box != null
+                    ? box.globalToLocal(event.position)
+                    : event.position;
+                _camera.zoomFromScrollAt(
+                  event.scrollDelta.dy,
+                  localPosition,
+                  viewSize,
+                );
               }
             },
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onScaleStart: _onScaleStart,
-              onScaleUpdate: _onScaleUpdate,
+              onScaleUpdate: (details) => _onScaleUpdate(details, viewSize),
               onScaleEnd: (_) {
                 final start = _gestureStart;
                 final end = _lastFocalPoint;
                 _gestureStart = null;
                 _lastFocalPoint = null;
+                _pinchStartTarget = null;
                 if (start != null &&
                     end != null &&
                     (end - start).distance <= _tapSlop) {

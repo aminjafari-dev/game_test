@@ -89,17 +89,18 @@ class CoffinGeometry {
   ///
   /// [vertices] are 2D template coordinates where Y increases downward; they
   /// are mapped to world X/Z. [unitToWorld] converts template units to meters.
+  /// [thicknessWorld] is the extrusion depth in meters (Y axis when flat).
   static Mesh flatPolygonMesh(
     List<Vector2> vertices,
-    double thickness,
     UnlitMaterial material, {
     required double unitToWorld,
+    required double thicknessWorld,
   }) {
     return Mesh(
       _flatPolygonGeometry(
         vertices,
-        thickness,
         unitToWorld: unitToWorld,
+        thicknessWorld: thicknessWorld,
       ),
       material,
     );
@@ -111,13 +112,12 @@ class CoffinGeometry {
   static Mesh flatRectangleMesh(
     double length,
     double width,
-    double thickness,
     UnlitMaterial material, {
     required double unitToWorld,
+    required double thicknessWorld,
   }) {
     final lengthWorld = length * unitToWorld;
     final widthWorld = width * unitToWorld;
-    final thicknessWorld = thickness * unitToWorld;
 
     return Mesh(
       CuboidGeometry(Vector3(lengthWorld, thicknessWorld, widthWorld)),
@@ -126,16 +126,16 @@ class CoffinGeometry {
   }
 
   static MeshGeometry _flatPolygonGeometry(
-    List<Vector2> vertices,
-    double thickness, {
+    List<Vector2> vertices, {
     required double unitToWorld,
+    required double thicknessWorld,
   }) {
     final vertexCount = vertices.length;
     if (vertexCount < 3) {
       throw ArgumentError('flatPolygonMesh requires at least 3 vertices.');
     }
 
-    final halfThickness = thickness * unitToWorld / 2;
+    final halfThickness = thicknessWorld / 2;
     final positions = <double>[];
     final normals = <double>[];
     final texCoords = <double>[];
@@ -161,66 +161,96 @@ class CoffinGeometry {
     double normalizeU(double x) => xSpan == 0 ? 0 : (x - minX) / xSpan;
     double normalizeV(double z) => zSpan == 0 ? 0 : (z - minZ) / zSpan;
 
-    void addVertex(double x, double y, double z, double nx, double ny, double nz) {
+    void addVertex(
+      double x,
+      double y,
+      double z,
+      double nx,
+      double ny,
+      double nz,
+    ) {
       positions.addAll([x, y, z]);
       normals.addAll([nx, ny, nz]);
       texCoords.addAll([normalizeU(x), normalizeV(z)]);
     }
 
+    // Top rim (+Y normal when viewed from above).
     for (var i = 0; i < vertexCount; i++) {
       final vertex = vertices[i];
-      final x = vertex.x * unitToWorld;
-      final z = vertex.y * unitToWorld;
-      addVertex(x, halfThickness, z, 0, 1, 0);
+      addVertex(
+        vertex.x * unitToWorld,
+        halfThickness,
+        vertex.y * unitToWorld,
+        0,
+        1,
+        0,
+      );
     }
 
+    // Bottom rim (-Y normal).
     for (var i = 0; i < vertexCount; i++) {
       final vertex = vertices[i];
-      final x = vertex.x * unitToWorld;
-      final z = vertex.y * unitToWorld;
-      addVertex(x, -halfThickness, z, 0, -1, 0);
+      addVertex(
+        vertex.x * unitToWorld,
+        -halfThickness,
+        vertex.y * unitToWorld,
+        0,
+        -1,
+        0,
+      );
     }
 
+    // Top cap (+Y normal): template vertices are CW in XZ when viewed from above,
+    // so reverse each fan triangle to make them CCW and visible from above.
     for (var i = 1; i < vertexCount - 1; i++) {
-      indices.addAll([0, i, i + 1]);
+      indices.addAll([0, i + 1, i]);
     }
 
-    final bottomOffset = vertexCount;
+    final bottomRimStart = vertexCount;
+
+    // Bottom cap (-Y normal): CW in XZ when viewed from above.
     for (var i = 1; i < vertexCount - 1; i++) {
-      indices.addAll([bottomOffset, bottomOffset + i + 1, bottomOffset + i]);
+      indices.addAll([
+        bottomRimStart,
+        bottomRimStart + i,
+        bottomRimStart + i + 1,
+      ]);
     }
 
+    // Side quads reuse rim vertices so caps and walls are watertight.
     for (var i = 0; i < vertexCount; i++) {
+      final next = (i + 1) % vertexCount;
+      final topA = i;
+      final topB = next;
+      final bottomA = bottomRimStart + i;
+      final bottomB = bottomRimStart + next;
+
       final current = vertices[i];
-      final next = vertices[(i + 1) % vertexCount];
-      final x0 = current.x * unitToWorld;
-      final z0 = current.y * unitToWorld;
-      final x1 = next.x * unitToWorld;
-      final z1 = next.y * unitToWorld;
-      final edgeX = x1 - x0;
-      final edgeZ = z1 - z0;
+      final edgeNext = vertices[next];
+      final edgeX = (edgeNext.x - current.x) * unitToWorld;
+      final edgeZ = (edgeNext.y - current.y) * unitToWorld;
       final length = math.sqrt(edgeX * edgeX + edgeZ * edgeZ);
       if (length == 0) {
         continue;
       }
 
-      final nx = edgeZ / length;
+      // Outward normal for a CW boundary in template space (Y grows downward).
+      final nx = -edgeZ / length;
       final nz = -edgeX / length;
-      final sideBase = positions.length ~/ 3;
 
-      addVertex(x0, halfThickness, z0, nx, 0, nz);
-      addVertex(x1, halfThickness, z1, nx, 0, nz);
-      addVertex(x1, -halfThickness, z1, nx, 0, nz);
-      addVertex(x0, -halfThickness, z0, nx, 0, nz);
+      void setSideNormal(int index) {
+        final base = index * 3;
+        normals[base] = nx;
+        normals[base + 1] = 0;
+        normals[base + 2] = nz;
+      }
 
-      indices.addAll([
-        sideBase,
-        sideBase + 1,
-        sideBase + 2,
-        sideBase,
-        sideBase + 2,
-        sideBase + 3,
-      ]);
+      setSideNormal(topA);
+      setSideNormal(topB);
+      setSideNormal(bottomA);
+      setSideNormal(bottomB);
+
+      indices.addAll([topA, topB, bottomB, topA, bottomB, bottomA]);
     }
 
     return MeshGeometry.fromArrays(
