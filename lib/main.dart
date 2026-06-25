@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:game_test/core/theme/app_theme.dart';
-import 'package:game_test/features/horror_survival/presentation/pages/horror_game_page.dart';
+import 'package:game_test/core/presentation/pages/home_shell_page.dart';
 import 'package:game_test/features/horror_survival/presentation/providers/game_provider.dart';
 import 'package:game_test/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -34,7 +34,7 @@ class HorrorSurvivalApp extends StatelessWidget {
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const HorrorGamePage(),
+        home: const HomeShellPage(),
       ),
     );
   }

@@ -124,4 +124,13 @@ class HorrorMaterials {
     }
     return _unlit(AppColors.mcOakWood);
   }
+
+  /// Coffin body panels — dark aged wood.
+  static UnlitMaterial coffinWood() => _unlit(AppColors.coffinWoodDark);
+
+  /// Coffin lid — slightly lighter wood tone.
+  static UnlitMaterial coffinLid() => _unlit(AppColors.coffinWoodLight);
+
+  /// Coffin handles and decorative metal trim.
+  static UnlitMaterial coffinMetal() => _unlit(AppColors.coffinMetal);
 }

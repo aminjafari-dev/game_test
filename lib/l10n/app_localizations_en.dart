@@ -12,6 +12,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Horror Survival';
 
   @override
+  String get tabGame => 'Game';
+
+  @override
+  String get tabElements => 'Elements';
+
+  @override
   String healthLabel(int health) {
     return 'Health: $health';
   }
@@ -99,4 +105,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get keyCollected => 'You found a key!';
+
+  @override
+  String get elementsCoffinTitle => 'Halloween Coffin';
+
+  @override
+  String get elementsCoffinSubtitle =>
+      'Preview and test the openable coffin prop before placing it in the game world.';
+
+  @override
+  String get elementsOpenCoffin => 'Open Coffin';
+
+  @override
+  String get elementsCloseCoffin => 'Close Coffin';
+
+  @override
+  String get elementsLoadingPreview => 'Loading workshop preview...';
+
+  @override
+  String get elementsCoffinStateOpen => 'Lid open';
+
+  @override
+  String get elementsCoffinStateClosed => 'Lid closed';
 }

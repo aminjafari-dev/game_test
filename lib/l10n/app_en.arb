@@ -4,6 +4,14 @@
   "@appTitle": {
     "description": "Application title shown in the app bar and launcher"
   },
+  "tabGame": "Game",
+  "@tabGame": {
+    "description": "Top tab label for the playable horror game screen"
+  },
+  "tabElements": "Elements",
+  "@tabElements": {
+    "description": "Top tab label for the elements workshop screen"
+  },
   "healthLabel": "Health: {health}",
   "@healthLabel": {
     "description": "HUD label showing current player health",
@@ -129,5 +137,33 @@
   "keyCollected": "You found a key!",
   "@keyCollected": {
     "description": "Snack bar when player collects a key"
+  },
+  "elementsCoffinTitle": "Halloween Coffin",
+  "@elementsCoffinTitle": {
+    "description": "Title for the coffin prop on the Elements workshop page"
+  },
+  "elementsCoffinSubtitle": "Preview and test the openable coffin prop before placing it in the game world.",
+  "@elementsCoffinSubtitle": {
+    "description": "Subtitle describing the coffin workshop preview"
+  },
+  "elementsOpenCoffin": "Open Coffin",
+  "@elementsOpenCoffin": {
+    "description": "Button label to open the coffin lid"
+  },
+  "elementsCloseCoffin": "Close Coffin",
+  "@elementsCloseCoffin": {
+    "description": "Button label to close the coffin lid"
+  },
+  "elementsLoadingPreview": "Loading workshop preview...",
+  "@elementsLoadingPreview": {
+    "description": "Loading text while the Elements 3D preview initializes"
+  },
+  "elementsCoffinStateOpen": "Lid open",
+  "@elementsCoffinStateOpen": {
+    "description": "Status label when the coffin lid is fully open"
+  },
+  "elementsCoffinStateClosed": "Lid closed",
+  "@elementsCoffinStateClosed": {
+    "description": "Status label when the coffin lid is fully closed"
   }
 }

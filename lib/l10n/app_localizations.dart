@@ -100,6 +100,18 @@ abstract class AppLocalizations {
   /// **'Horror Survival'**
   String get appTitle;
 
+  /// Top tab label for the playable horror game screen
+  ///
+  /// In en, this message translates to:
+  /// **'Game'**
+  String get tabGame;
+
+  /// Top tab label for the elements workshop screen
+  ///
+  /// In en, this message translates to:
+  /// **'Elements'**
+  String get tabElements;
+
   /// HUD label showing current player health
   ///
   /// In en, this message translates to:
@@ -261,6 +273,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You found a key!'**
   String get keyCollected;
+
+  /// Title for the coffin prop on the Elements workshop page
+  ///
+  /// In en, this message translates to:
+  /// **'Halloween Coffin'**
+  String get elementsCoffinTitle;
+
+  /// Subtitle describing the coffin workshop preview
+  ///
+  /// In en, this message translates to:
+  /// **'Preview and test the openable coffin prop before placing it in the game world.'**
+  String get elementsCoffinSubtitle;
+
+  /// Button label to open the coffin lid
+  ///
+  /// In en, this message translates to:
+  /// **'Open Coffin'**
+  String get elementsOpenCoffin;
+
+  /// Button label to close the coffin lid
+  ///
+  /// In en, this message translates to:
+  /// **'Close Coffin'**
+  String get elementsCloseCoffin;
+
+  /// Loading text while the Elements 3D preview initializes
+  ///
+  /// In en, this message translates to:
+  /// **'Loading workshop preview...'**
+  String get elementsLoadingPreview;
+
+  /// Status label when the coffin lid is fully open
+  ///
+  /// In en, this message translates to:
+  /// **'Lid open'**
+  String get elementsCoffinStateOpen;
+
+  /// Status label when the coffin lid is fully closed
+  ///
+  /// In en, this message translates to:
+  /// **'Lid closed'**
+  String get elementsCoffinStateClosed;
 }
 
 class _AppLocalizationsDelegate

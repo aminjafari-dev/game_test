@@ -24,7 +24,7 @@ class AppColors {
   static const Color doorBrownDark = Color(0xFF3D2814);
 
   /// Scene block palette — used verbatim by unlit 3D materials.
-  static const Color mcGrass = Color(0xFFDD1C1A);
+  static const Color mcGrass = Colors.green;
   static const Color mcWhite = Color(0xFFD4CCC0);
   static const Color mcDarkGray = Color(0xFF3A3A3A);
   static const Color mcOakWood = Color(0xFFB8956A);
@@ -33,6 +33,15 @@ class AppColors {
   static const Color mcCrop = Color(0xFF3D5A32);
   static const Color mcTreeTrunk = Color(0xFF5C4528);
   static const Color mcTreeLeaves = Color(0xFF4A5C3A);
+
+  /// Halloween coffin body — aged dark wood.
+  static const Color coffinWoodDark = Color(0xFF2A1810);
+
+  /// Halloween coffin lid — slightly lighter dusted wood.
+  static const Color coffinWoodLight = Color(0xFF3D2818);
+
+  /// Tarnished metal handles and trim on the coffin.
+  static const Color coffinMetal = Color(0xFF6B5A42);
 
   /// Legacy map colors (kept for HUD compatibility).
   static const Color mapGrass = mcGrass;
