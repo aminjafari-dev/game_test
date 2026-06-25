@@ -6,4 +6,5 @@ class ModelPath {
   ModelPath._();
 
   static const String tree = 'assets/models/tree.glb';
+  static const String monster = 'assets/models/monster.glb';
 }

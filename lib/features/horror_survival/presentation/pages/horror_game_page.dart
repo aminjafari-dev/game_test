@@ -100,9 +100,10 @@ class _HorrorGamePageState extends State<HorrorGamePage> {
     playerController.yaw = 3.14159;
     scene.add(playerController.playerNode);
 
+    final monsterTemplate = await MonsterTemplate.load();
     final monsters = <MonsterEntity>[
-      MonsterSpawner.spawn(worldNode, Vector3(9, 0, 2)),
-      MonsterSpawner.spawn(worldNode, Vector3(-8, 0, 6)),
+      MonsterSpawner.spawn(worldNode, monsterTemplate, Vector3(9, 0, 2)),
+      MonsterSpawner.spawn(worldNode, monsterTemplate, Vector3(-8, 0, 6)),
     ];
 
     if (!mounted) return;
@@ -195,7 +196,10 @@ class _HorrorGamePageState extends State<HorrorGamePage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    if (!_ready || _scene == null || _playerController == null || _gameLoop == null) {
+    if (!_ready ||
+        _scene == null ||
+        _playerController == null ||
+        _gameLoop == null) {
       return GScaffold(
         body: Center(
           child: GText(l10n.loadingScene, style: GTextStyle.subtitle),

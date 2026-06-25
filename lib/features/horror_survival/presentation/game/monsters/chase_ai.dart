@@ -48,6 +48,12 @@ class ChaseAI {
       final dist = toPlayer.length;
 
       if (dist < monster.attackRadius && monster.attackCooldown <= 0) {
+        monster.setRunning(false);
+        _placeMonster(
+          monster,
+          monster.position,
+          facingY: monster.facingYawToward(playerPos),
+        );
         game.takeDamage(monster.damage.round());
         monster.attackCooldown = 2.0;
         audioManager.playOneShot(AudioPaths.sfxMonsterGrowl, volume: 0.7);
@@ -59,24 +65,45 @@ class ChaseAI {
         final dir = toPlayer.normalized();
         final move = dir * monster.speed * dt;
         final newPos = monster.position + Vector3(move.x, 0, move.z);
+        final facingY = monster.facingYawToward(playerPos);
 
-        final pose = Matrix4.translation(newPos + Vector3(0, 0.9, 0));
+        final pose = Matrix4.translation(
+          newPos + Vector3(0, monster.colliderCenterY, 0),
+        );
         final blocked = physicsWorld.shapeCast(
-          SphereShape(radius: 0.5),
+          SphereShape(radius: monster.colliderRadius * 0.85),
           pose,
           dir,
           move.length + 0.1,
           includeTriggers: false,
         );
 
+        monster.setRunning(true);
+
         if (blocked == null) {
-          monster.node.localTransform = Matrix4.translation(newPos);
+          _placeMonster(monster, newPos, facingY: facingY);
         } else {
           final slideDir = Vector3(-dir.z, 0, dir.x);
-          final slidePos = monster.position + slideDir * monster.speed * dt * 0.5;
-          monster.node.localTransform = Matrix4.translation(slidePos);
+          final slidePos =
+              monster.position + slideDir * monster.speed * dt * 0.5;
+          _placeMonster(monster, slidePos, facingY: facingY);
         }
+      } else {
+        monster.setRunning(false);
       }
     }
+  }
+
+  /// Writes world position, facing, and GLB scale onto the monster root node.
+  void _placeMonster(
+    MonsterEntity monster,
+    Vector3 position, {
+    required double facingY,
+  }) {
+    monster.node.localTransform = Matrix4.compose(
+      position,
+      Quaternion.axisAngle(Vector3(0, 1, 0), facingY),
+      Vector3.all(monster.visualScale),
+    );
   }
 }

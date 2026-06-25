@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:game_test/core/theme/app_theme.dart';
 import 'package:game_test/features/horror_survival/presentation/pages/horror_game_page.dart';
@@ -6,7 +7,12 @@ import 'package:game_test/features/horror_survival/presentation/providers/game_p
 import 'package:game_test/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
   runApp(const HorrorSurvivalApp());
 }
 
