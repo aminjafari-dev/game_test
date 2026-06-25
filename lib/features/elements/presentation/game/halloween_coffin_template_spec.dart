@@ -76,8 +76,12 @@ class HalloweenCoffinTemplateSpec {
             lowerSlantHorizontalIn * lowerSlantHorizontalIn,
       );
 
-  /// Cardboard thickness for flat preview pieces.
-  static const double pieceThicknessIn = 0.125;
+  /// Board thickness for flat preview pieces.
+  ///
+  /// Set to a real lumber thickness (3/4") so each extruded piece reads as a
+  /// solid wooden plank rather than thin paper/cardboard. Increase this if the
+  /// boards should look even chunkier.
+  static const double pieceThicknessIn = 2;
 
   /// Gap between cut-sheet pieces in the flat layout preview.
   static const double layoutGapIn = 1.0;
