@@ -144,4 +144,7 @@ class HorrorMaterials {
     material.baseColorTexture = texture;
     return material;
   }
+
+  /// Coffin base panel — solid pure black (no texture).
+  static UnlitMaterial coffinBaseBlack() => _unlit(AppColors.pureBlack);
 }

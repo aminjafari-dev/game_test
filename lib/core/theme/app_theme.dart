@@ -34,6 +34,9 @@ class AppColors {
   static const Color mcTreeTrunk = Color(0xFF5C4528);
   static const Color mcTreeLeaves = Color(0xFF4A5C3A);
 
+  /// Pure black for coffin interior / base panels.
+  static const Color pureBlack = Color(0xFF000000);
+
   /// Halloween coffin body — aged dark wood.
   static const Color coffinWoodDark = Color(0xFF2A1810);
 

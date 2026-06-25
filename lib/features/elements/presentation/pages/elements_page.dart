@@ -4,6 +4,7 @@ import 'package:game_test/core/constants/image_path.dart';
 import 'package:game_test/core/widgets/g_scaffold.dart';
 import 'package:game_test/core/widgets/g_text.dart';
 import 'package:game_test/features/elements/presentation/game/coffin_builder.dart';
+import 'package:game_test/features/elements/presentation/game/halloween_coffin_pieces_builder.dart';
 import 'package:game_test/features/elements/presentation/game/orbit_camera_controller.dart';
 import 'package:game_test/features/horror_survival/presentation/game/materials/horror_materials.dart';
 import 'package:game_test/l10n/app_localizations.dart';
@@ -79,6 +80,12 @@ class _ElementsPageState extends State<ElementsPage> {
       texturedWood: true,
     );
     world.add(coffin.root);
+
+    final cutSheet = HalloweenCoffinPiecesBuilder.buildFlatCutSheet(
+      material: woodMaterial,
+      baseMaterial: HorrorMaterials.coffinBaseBlack(),
+    );
+    world.add(cutSheet.root);
 
     scene.add(world);
 
