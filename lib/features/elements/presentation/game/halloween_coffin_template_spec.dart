@@ -70,34 +70,20 @@ class HalloweenCoffinTemplateSpec {
   );
 
   /// Y distance from the head edge to the foot edge along the center line.
-  static final double baseHeightIn =
-      shoulderYIn +
+  static final double baseHeightIn = shoulderYIn +
       math.sqrt(
         lowerSlantIn * lowerSlantIn -
             lowerSlantHorizontalIn * lowerSlantHorizontalIn,
       );
 
-  /// Cardboard thickness for flat preview pieces — matches [CoffinBuilder]
-  /// wall and base panel depth (0.04 m).
-  static const double panelThicknessWorld = 0.04;
-
-  /// Lid/door panel depth — matches [CoffinBuilder] lid thickness (0.06 m).
-  static const double lidThicknessWorld = 0.06;
-
-  /// Half panel thickness in world units, used to rest pieces on the ground.
-  static double get panelHalfThicknessWorld => panelThicknessWorld / 2;
-
-  /// Half lid thickness in world units.
-  static double get lidHalfThicknessWorld => lidThicknessWorld / 2;
+  /// Cardboard thickness for flat preview pieces.
+  static const double pieceThicknessIn = 0.125;
 
   /// Gap between cut-sheet pieces in the flat layout preview.
   static const double layoutGapIn = 1.0;
 
   /// Default world offset so the cut sheet sits beside the assembled coffin.
   static const double cutSheetOffsetX = 4.0;
-
-  /// World offset for the template-assembled coffin (left of the legacy prop).
-  static const double assembledOffsetX = -2.2;
 
   /// Converts inches to world meters so the template height matches the
   /// assembled coffin length scale (~2 m).
@@ -156,8 +142,9 @@ class HalloweenCoffinTemplateSpec {
 
   /// Anchor for the right door — seam at x = 0 local faces the cut sheet.
   static Vector2 get rightDoorAnchorIn => Vector2(doorSeamXIn, 0);
-
-  /// Converts template 2D inch coordinates to a flat ground position in world space.
+  ///
+  /// Template Y increases downward; world Z receives that axis so pieces lie
+  /// flat on the ground with Y as thickness.
   static Vector3 templateInToWorld(Vector2 templateIn, {double yWorld = 0}) {
     return Vector3(
       templateIn.x * inchesToWorld,
@@ -165,4 +152,14 @@ class HalloweenCoffinTemplateSpec {
       templateIn.y * inchesToWorld,
     );
   }
+
+  /// Half thickness of a flat piece in world units, used to rest it on the ground.
+  static double get pieceHalfThicknessWorld =>
+      pieceThicknessIn * inchesToWorld / 2;
+
+  /// Full cardboard thickness of a flat piece in world meters.
+  ///
+  /// Use this for the `thicknessWorld` argument of [CoffinGeometry] mesh
+  /// helpers so every piece extrudes by the same depth as the spec defines.
+  static double get pieceThicknessWorld => pieceThicknessIn * inchesToWorld;
 }

@@ -4,6 +4,7 @@ import 'package:game_test/core/constants/image_path.dart';
 import 'package:game_test/core/widgets/g_scaffold.dart';
 import 'package:game_test/core/widgets/g_text.dart';
 import 'package:game_test/features/elements/presentation/game/coffin_builder.dart';
+import 'package:game_test/features/elements/presentation/game/halloween_coffin_glued_builder.dart';
 import 'package:game_test/features/elements/presentation/game/halloween_coffin_pieces_builder.dart';
 import 'package:game_test/features/elements/presentation/game/orbit_camera_controller.dart';
 import 'package:game_test/features/horror_survival/presentation/game/materials/horror_materials.dart';
@@ -32,7 +33,10 @@ class _ElementsPageState extends State<ElementsPage> {
   Offset? _gestureStart;
   Offset? _lastFocalPoint;
   double _pinchStartDistance = 0;
-  Vector3? _pinchStartTarget;
+  // Camera target captured when a pinch begins so anchored zoom stays stable.
+  Vector3 _pinchStartTarget = Vector3.zero();
+  // Latest rendered view size, needed to convert screen points to camera rays.
+  Size _viewSize = Size.zero;
   static const double _tapSlop = 12;
 
   @override
@@ -88,11 +92,13 @@ class _ElementsPageState extends State<ElementsPage> {
     );
     world.add(cutSheet.root);
 
-    final templateAssembly = HalloweenCoffinPiecesBuilder.buildAssembled(
+    // Glue the exact same template pieces together into an assembled coffin and
+    // park it next to the flat cut sheet for a side-by-side comparison.
+    final gluedCoffin = HalloweenCoffinGluedBuilder.build(
       material: woodMaterial,
       baseMaterial: HorrorMaterials.coffinBaseBlack(),
     );
-    world.add(templateAssembly.root);
+    world.add(gluedCoffin.root);
 
     scene.add(world);
 
@@ -122,18 +128,21 @@ class _ElementsPageState extends State<ElementsPage> {
     _gestureStart = details.localFocalPoint;
     _lastFocalPoint = details.localFocalPoint;
     _pinchStartDistance = _camera.distance;
+    // Snapshot the orbit target so pinch zoom can keep the focal point anchored.
     _pinchStartTarget = _camera.target.clone();
   }
 
-  void _onScaleUpdate(ScaleUpdateDetails details, Size viewSize) {
+  void _onScaleUpdate(ScaleUpdateDetails details) {
     _lastFocalPoint = details.localFocalPoint;
-    if (details.scale != 1.0 && _pinchStartTarget != null) {
+    // A scale other than 1.0 means the user is pinching, so zoom toward the
+    // focal point relative to where the gesture started.
+    if (details.scale != 1.0) {
       _camera.zoomFromPinchAt(
         startDistance: _pinchStartDistance,
         scale: details.scale,
-        startTarget: _pinchStartTarget!,
+        startTarget: _pinchStartTarget,
         focalPoint: details.localFocalPoint,
-        viewSize: viewSize,
+        viewSize: _viewSize,
       );
     }
     if (details.focalPointDelta != Offset.zero) {
@@ -160,17 +169,15 @@ class _ElementsPageState extends State<ElementsPage> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final viewSize = Size(constraints.maxWidth, constraints.maxHeight);
+          // Keep the latest view size so gesture handlers can build camera rays.
+          _viewSize = viewSize;
 
           return Listener(
             onPointerSignal: (event) {
               if (event is PointerScrollEvent) {
-                final box = context.findRenderObject() as RenderBox?;
-                final localPosition = box != null
-                    ? box.globalToLocal(event.position)
-                    : event.position;
                 _camera.zoomFromScrollAt(
                   event.scrollDelta.dy,
-                  localPosition,
+                  event.localPosition,
                   viewSize,
                 );
               }
@@ -178,13 +185,12 @@ class _ElementsPageState extends State<ElementsPage> {
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onScaleStart: _onScaleStart,
-              onScaleUpdate: (details) => _onScaleUpdate(details, viewSize),
+              onScaleUpdate: _onScaleUpdate,
               onScaleEnd: (_) {
                 final start = _gestureStart;
                 final end = _lastFocalPoint;
                 _gestureStart = null;
                 _lastFocalPoint = null;
-                _pinchStartTarget = null;
                 if (start != null &&
                     end != null &&
                     (end - start).distance <= _tapSlop) {
