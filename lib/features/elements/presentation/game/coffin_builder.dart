@@ -247,6 +247,20 @@ class CoffinProp {
   /// Flips between open and closed target states.
   void toggle() => setOpen(!isOpen);
 
+  /// Whether the lid is still animating toward its target angle.
+  bool get isAnimating =>
+      (_currentAngle - _targetAngle).abs() >= _angleEpsilon;
+
+  /// Returns true when [node] is this coffin's root or any descendant mesh.
+  bool containsNode(Node node) {
+    Node? current = node;
+    while (current != null) {
+      if (current == root) return true;
+      current = current.parent;
+    }
+    return false;
+  }
+
   /// Advances lid animation by [dt] seconds and updates the hinge transform.
   void tick(double dt) {
     if ((_currentAngle - _targetAngle).abs() < _angleEpsilon) {

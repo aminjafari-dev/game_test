@@ -51,7 +51,7 @@ class FirstPersonController {
 
   /// Updates movement and look from input each frame.
   void tick(double dt) {
-    yaw -= inputState.lookDeltaX * lookSensitivity;
+    yaw += inputState.lookDeltaX * lookSensitivity;
     pitch = (pitch - inputState.lookDeltaY * lookSensitivity).clamp(minPitch, maxPitch);
 
     final forward = Vector3(math.sin(yaw), 0, math.cos(yaw));

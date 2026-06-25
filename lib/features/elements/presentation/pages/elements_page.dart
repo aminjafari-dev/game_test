@@ -1,8 +1,9 @@
+import 'package:flutter/gestures.dart' show PointerScrollEvent;
 import 'package:flutter/material.dart' hide Matrix4;
 import 'package:game_test/core/widgets/g_scaffold.dart';
 import 'package:game_test/core/widgets/g_text.dart';
 import 'package:game_test/features/elements/presentation/game/coffin_builder.dart';
-import 'package:game_test/features/elements/presentation/widgets/coffin_control_bar.dart';
+import 'package:game_test/features/elements/presentation/game/orbit_camera_controller.dart';
 import 'package:game_test/features/horror_survival/presentation/game/materials/horror_materials.dart';
 import 'package:game_test/l10n/app_localizations.dart';
 import 'package:flutter_scene/scene.dart';
@@ -10,10 +11,8 @@ import 'package:vector_math/vector_math.dart';
 
 /// Workshop screen for building and previewing reusable game elements.
 ///
-/// Currently previews the Halloween coffin prop with open/close controls.
-/// Opened from [HomeShellPage] when the Elements tab is selected.
-///
-/// Example: `const ElementsPage()` inside [IndexedStack] on the home shell.
+/// Drag to orbit the camera, scroll or pinch to zoom, tap the coffin to
+/// toggle its lid. Opened from [HomeShellPage] when the Elements tab is selected.
 class ElementsPage extends StatefulWidget {
   const ElementsPage({super.key});
 
@@ -26,8 +25,12 @@ class _ElementsPageState extends State<ElementsPage> {
   CoffinProp? _coffin;
   bool _ready = false;
 
-  static final Vector3 _cameraPosition = Vector3(2.8, 1.6, 2.8);
-  static final Vector3 _cameraTarget = Vector3(0, 0.25, 0);
+  final OrbitCameraController _camera = OrbitCameraController();
+
+  Offset? _gestureStart;
+  Offset? _lastFocalPoint;
+  double _pinchStartDistance = 0;
+  static const double _tapSlop = 12;
 
   @override
   void initState() {
@@ -68,7 +71,6 @@ class _ElementsPageState extends State<ElementsPage> {
     );
 
     final coffin = CoffinBuilder.build();
-    coffin.root.localTransform = Matrix4.translation(Vector3(0, 0, 0));
     world.add(coffin.root);
 
     scene.add(world);
@@ -81,15 +83,34 @@ class _ElementsPageState extends State<ElementsPage> {
     });
   }
 
-  PerspectiveCamera _buildCamera() {
-    return PerspectiveCamera(
-      position: _cameraPosition,
-      target: _cameraTarget,
-      up: Vector3(0, 1, 0),
-      fovRadiansY: 55 * degrees2Radians,
-      fovNear: 0.1,
-      fovFar: 50,
-    );
+  void _handleTap(Offset localPosition, Size viewSize) {
+    final scene = _scene;
+    final coffin = _coffin;
+    if (scene == null || coffin == null) return;
+
+    final camera = _camera.buildCamera();
+    final ray = camera.screenPointToRay(localPosition, viewSize);
+    final hit = scene.raycast(ray);
+    if (hit != null && coffin.containsNode(hit.node)) {
+      coffin.toggle();
+      setState(() {});
+    }
+  }
+
+  void _onScaleStart(ScaleStartDetails details) {
+    _gestureStart = details.localFocalPoint;
+    _lastFocalPoint = details.localFocalPoint;
+    _pinchStartDistance = _camera.distance;
+  }
+
+  void _onScaleUpdate(ScaleUpdateDetails details) {
+    _lastFocalPoint = details.localFocalPoint;
+    if (details.scale != 1.0) {
+      _camera.zoomFromPinch(_pinchStartDistance, details.scale);
+    }
+    if (details.focalPointDelta != Offset.zero) {
+      _camera.orbit(details.focalPointDelta.dx, details.focalPointDelta.dy);
+    }
   }
 
   @override
@@ -105,37 +126,47 @@ class _ElementsPageState extends State<ElementsPage> {
     }
 
     final coffin = _coffin!;
+    final scene = _scene!;
 
     return GScaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          SceneView(
-            _scene!,
-            cameraBuilder: (_) => _buildCamera(),
-            onTick: (_, dt) {
-              coffin.tick(dt);
-              if (mounted) {
-                setState(() {});
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final viewSize = Size(constraints.maxWidth, constraints.maxHeight);
+
+          return Listener(
+            onPointerSignal: (event) {
+              if (event is PointerScrollEvent) {
+                _camera.zoomFromScroll(event.scrollDelta.dy);
               }
             },
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 480),
-                  child: CoffinControlBar(
-                    coffin: coffin,
-                    onStateChanged: () => setState(() {}),
-                  ),
-                ),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onScaleStart: _onScaleStart,
+              onScaleUpdate: _onScaleUpdate,
+              onScaleEnd: (_) {
+                final start = _gestureStart;
+                final end = _lastFocalPoint;
+                _gestureStart = null;
+                _lastFocalPoint = null;
+                if (start != null &&
+                    end != null &&
+                    (end - start).distance <= _tapSlop) {
+                  _handleTap(end, viewSize);
+                }
+              },
+              child: SceneView(
+                scene,
+                cameraBuilder: (_) => _camera.buildCamera(),
+                onTick: (_, dt) {
+                  coffin.tick(dt);
+                  if (coffin.isAnimating && mounted) {
+                    setState(() {});
+                  }
+                },
               ),
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
