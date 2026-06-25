@@ -5,10 +5,10 @@ import 'package:game_test/features/elements/presentation/game/coffin_geometry.da
 import 'package:game_test/features/horror_survival/presentation/game/materials/horror_materials.dart';
 import 'package:vector_math/vector_math.dart';
 
-/// Procedural Halloween coffin with split left/right side doors.
+/// Procedural Halloween coffin with fixed side walls and split upper lids.
 ///
-/// The coffin opens vertically down the center: the left door swings up and
-/// outward to the left, the right door swings up and outward to the right.
+/// The side walls stay fixed; only the left and right lid halves swing open
+/// from the outer edges when toggled.
 ///
 /// Example:
 /// ```dart
@@ -50,7 +50,7 @@ class CoffinBuilder {
     final bodyGroup = Node(name: 'coffin_body');
     root.add(bodyGroup);
 
-    _buildBody(bodyGroup, wood: wood, texturedWood: texturedWood);
+    _buildBody(bodyGroup, wood: wood, metal: metal, texturedWood: texturedWood);
 
     final doorCenterY = _bodyHeight / 2 + _wallThickness + _lidThickness / 2;
     final leftHingePosition = Vector3(-_headHalfWidth, doorCenterY, 0);
@@ -59,8 +59,7 @@ class CoffinBuilder {
     final leftHingeNode = Node(name: 'coffin_hinge_left');
     leftHingeNode.localTransform = Matrix4.translation(leftHingePosition);
     root.add(leftHingeNode);
-    leftHingeNode.add(_buildLeftDoor(
-      wood: wood,
+    leftHingeNode.add(_buildLeftLid(
       lid: lid,
       metal: metal,
       texturedWood: texturedWood,
@@ -69,8 +68,7 @@ class CoffinBuilder {
     final rightHingeNode = Node(name: 'coffin_hinge_right');
     rightHingeNode.localTransform = Matrix4.translation(rightHingePosition);
     root.add(rightHingeNode);
-    rightHingeNode.add(_buildRightDoor(
-      wood: wood,
+    rightHingeNode.add(_buildRightLid(
       lid: lid,
       metal: metal,
       texturedWood: texturedWood,
@@ -89,8 +87,11 @@ class CoffinBuilder {
   static void _buildBody(
     Node bodyGroup, {
     required UnlitMaterial wood,
+    required UnlitMaterial metal,
     required bool texturedWood,
   }) {
+    final wallCenterY = _bodyHeight / 2 + _wallThickness;
+
     bodyGroup.add(
       Node(
         name: 'coffin_bottom',
@@ -107,7 +108,7 @@ class CoffinBuilder {
       bodyGroup,
       name: 'head_wall',
       size: Vector3(_headHalfWidth * 2, _bodyHeight, _wallThickness),
-      position: Vector3(0, _bodyHeight / 2 + _wallThickness, -_halfLength + _wallThickness / 2),
+      position: Vector3(0, wallCenterY, -_halfLength + _wallThickness / 2),
       material: wood,
       texturedWood: texturedWood,
     );
@@ -115,50 +116,91 @@ class CoffinBuilder {
       bodyGroup,
       name: 'foot_wall',
       size: Vector3(_footHalfWidth * 2, _bodyHeight, _wallThickness),
-      position: Vector3(0, _bodyHeight / 2 + _wallThickness, _halfLength - _wallThickness / 2),
+      position: Vector3(0, wallCenterY, _halfLength - _wallThickness / 2),
       material: wood,
       texturedWood: texturedWood,
     );
-  }
 
-  static Node _buildLeftDoor({
-    required UnlitMaterial wood,
-    required UnlitMaterial lid,
-    required UnlitMaterial metal,
-    required bool texturedWood,
-  }) {
-    final doorGroup = Node(name: 'coffin_door_left');
-    final panelY = -(_lidThickness / 2 + _wallThickness / 2);
-
-    _addDoorWall(
-      doorGroup,
-      name: 'left_head_panel',
+    _addWall(
+      bodyGroup,
+      name: 'left_head_wall',
       size: Vector3(_wallThickness, _bodyHeight, _halfLength),
       position: Vector3(
-        _headHalfWidth / 2 - _wallThickness / 2,
-        panelY,
+        -_headHalfWidth / 2 - _wallThickness / 2,
+        wallCenterY,
         -_halfLength / 2,
       ),
       material: wood,
       texturedWood: texturedWood,
     );
-    _addDoorWall(
-      doorGroup,
-      name: 'left_foot_panel',
+    _addWall(
+      bodyGroup,
+      name: 'left_foot_wall',
       size: Vector3(_wallThickness, _bodyHeight, _halfLength),
       position: Vector3(
-        _footHalfWidth / 2 - _wallThickness / 2,
-        panelY,
+        -_footHalfWidth / 2 - _wallThickness / 2,
+        wallCenterY,
+        _halfLength / 2,
+      ),
+      material: wood,
+      texturedWood: texturedWood,
+    );
+    _addWall(
+      bodyGroup,
+      name: 'right_head_wall',
+      size: Vector3(_wallThickness, _bodyHeight, _halfLength),
+      position: Vector3(
+        _headHalfWidth / 2 + _wallThickness / 2,
+        wallCenterY,
+        -_halfLength / 2,
+      ),
+      material: wood,
+      texturedWood: texturedWood,
+    );
+    _addWall(
+      bodyGroup,
+      name: 'right_foot_wall',
+      size: Vector3(_wallThickness, _bodyHeight, _halfLength),
+      position: Vector3(
+        _footHalfWidth / 2 + _wallThickness / 2,
+        wallCenterY,
         _halfLength / 2,
       ),
       material: wood,
       texturedWood: texturedWood,
     );
 
+    bodyGroup.add(
+      Node(
+        name: 'left_handle',
+        localTransform: Matrix4.translation(
+          Vector3(-_headHalfWidth - 0.02, wallCenterY, 0),
+        ),
+        mesh: Mesh(CuboidGeometry(Vector3(0.06, 0.08, 0.25)), metal),
+      ),
+    );
+    bodyGroup.add(
+      Node(
+        name: 'right_handle',
+        localTransform: Matrix4.translation(
+          Vector3(_headHalfWidth + 0.02, wallCenterY, 0),
+        ),
+        mesh: Mesh(CuboidGeometry(Vector3(0.06, 0.08, 0.25)), metal),
+      ),
+    );
+  }
+
+  static Node _buildLeftLid({
+    required UnlitMaterial lid,
+    required UnlitMaterial metal,
+    required bool texturedWood,
+  }) {
+    final lidGroup = Node(name: 'coffin_lid_left');
+
     final lidHalfWidth = (_headHalfWidth + _footHalfWidth) / 2;
     final lidCenterX = lidHalfWidth / 2 + _lidInwardInset;
     final lidCenterY = _lidThickness / 2 - _lidDownInset;
-    doorGroup.add(
+    lidGroup.add(
       Node(
         name: 'left_lid_half',
         localTransform: Matrix4.translation(Vector3(lidCenterX, lidCenterY, 0)),
@@ -174,7 +216,7 @@ class CoffinBuilder {
       ),
     );
 
-    doorGroup.add(
+    lidGroup.add(
       Node(
         name: 'left_cross_vertical',
         localTransform: Matrix4.translation(
@@ -184,55 +226,20 @@ class CoffinBuilder {
       ),
     );
 
-    doorGroup.add(
-      Node(
-        name: 'left_handle',
-        localTransform: Matrix4.translation(Vector3(_headHalfWidth / 2, panelY, 0)),
-        mesh: Mesh(CuboidGeometry(Vector3(0.06, 0.08, 0.25)), metal),
-      ),
-    );
-
-    return doorGroup;
+    return lidGroup;
   }
 
-  static Node _buildRightDoor({
-    required UnlitMaterial wood,
+  static Node _buildRightLid({
     required UnlitMaterial lid,
     required UnlitMaterial metal,
     required bool texturedWood,
   }) {
-    final doorGroup = Node(name: 'coffin_door_right');
-    final panelY = -(_lidThickness / 2 + _wallThickness / 2);
-
-    _addDoorWall(
-      doorGroup,
-      name: 'right_head_panel',
-      size: Vector3(_wallThickness, _bodyHeight, _halfLength),
-      position: Vector3(
-        -_headHalfWidth / 2 + _wallThickness / 2,
-        panelY,
-        -_halfLength / 2,
-      ),
-      material: wood,
-      texturedWood: texturedWood,
-    );
-    _addDoorWall(
-      doorGroup,
-      name: 'right_foot_panel',
-      size: Vector3(_wallThickness, _bodyHeight, _halfLength),
-      position: Vector3(
-        -_footHalfWidth / 2 + _wallThickness / 2,
-        panelY,
-        _halfLength / 2,
-      ),
-      material: wood,
-      texturedWood: texturedWood,
-    );
+    final lidGroup = Node(name: 'coffin_lid_right');
 
     final lidHalfWidth = (_headHalfWidth + _footHalfWidth) / 2;
     final lidCenterX = -lidHalfWidth / 2 - _lidInwardInset;
     final lidCenterY = _lidThickness / 2 - _lidDownInset;
-    doorGroup.add(
+    lidGroup.add(
       Node(
         name: 'right_lid_half',
         localTransform: Matrix4.translation(Vector3(lidCenterX, lidCenterY, 0)),
@@ -248,7 +255,7 @@ class CoffinBuilder {
       ),
     );
 
-    doorGroup.add(
+    lidGroup.add(
       Node(
         name: 'right_cross_vertical',
         localTransform: Matrix4.translation(
@@ -258,15 +265,7 @@ class CoffinBuilder {
       ),
     );
 
-    doorGroup.add(
-      Node(
-        name: 'right_handle',
-        localTransform: Matrix4.translation(Vector3(-_headHalfWidth / 2, panelY, 0)),
-        mesh: Mesh(CuboidGeometry(Vector3(0.06, 0.08, 0.25)), metal),
-      ),
-    );
-
-    return doorGroup;
+    return lidGroup;
   }
 
   static Mesh _cuboidMesh(
@@ -296,27 +295,9 @@ class CoffinBuilder {
       ),
     );
   }
-
-  static void _addDoorWall(
-    Node parent, {
-    required String name,
-    required Vector3 size,
-    required Vector3 position,
-    required UnlitMaterial material,
-    required bool texturedWood,
-  }) {
-    _addWall(
-      parent,
-      name: name,
-      size: size,
-      position: position,
-      material: material,
-      texturedWood: texturedWood,
-    );
-  }
 }
 
-/// Runtime state for a [CoffinBuilder] prop — animates both side doors together.
+/// Runtime state for a [CoffinBuilder] prop — animates both upper lids together.
 class CoffinProp {
   CoffinProp({
     required this.root,
