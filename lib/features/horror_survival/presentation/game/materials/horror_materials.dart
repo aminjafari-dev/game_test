@@ -133,4 +133,15 @@ class HorrorMaterials {
 
   /// Coffin handles and decorative metal trim.
   static UnlitMaterial coffinMetal() => _unlit(AppColors.coffinMetal);
+
+  /// Coffin wood panels textured with the Halloween coffin PNG asset.
+  ///
+  /// Pass the GPU texture from [gpuTextureFromAsset] after
+  /// [Scene.initializeStaticResources].
+  static UnlitMaterial coffinTextured(Object texture) {
+    final material = UnlitMaterial();
+    material.baseColorFactor = Vector4(1, 1, 1, 1);
+    material.baseColorTexture = texture;
+    return material;
+  }
 }

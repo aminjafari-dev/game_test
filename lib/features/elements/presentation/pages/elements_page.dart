@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart' show PointerScrollEvent;
 import 'package:flutter/material.dart' hide Matrix4;
+import 'package:game_test/core/constants/image_path.dart';
 import 'package:game_test/core/widgets/g_scaffold.dart';
 import 'package:game_test/core/widgets/g_text.dart';
 import 'package:game_test/features/elements/presentation/game/coffin_builder.dart';
@@ -70,7 +71,13 @@ class _ElementsPageState extends State<ElementsPage> {
       ),
     );
 
-    final coffin = CoffinBuilder.build();
+    final woodTexture = await gpuTextureFromAsset(ImagePath.halloweenCoffinWood);
+    final woodMaterial = HorrorMaterials.coffinTextured(woodTexture);
+
+    final coffin = CoffinBuilder.build(
+      woodMaterial: woodMaterial,
+      texturedWood: true,
+    );
     world.add(coffin.root);
 
     scene.add(world);
