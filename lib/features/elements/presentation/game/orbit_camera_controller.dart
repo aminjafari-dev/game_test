@@ -6,9 +6,9 @@ import 'package:vector_math/vector_math.dart';
 
 /// Orbit camera for the Elements workshop 3D preview.
 ///
-/// Drag to rotate around [target], scroll or pinch to zoom toward the pointer
-/// or pinch focal point. Example: `OrbitCameraController().buildCamera()` in
-/// [SceneView.cameraBuilder].
+/// [pan] slides [target] in screen space (left/right/up/down), [orbit] rotates
+/// around it, and the zoom helpers dolly toward a pointer or pinch focal point.
+/// Example: `OrbitCameraController().buildCamera()` in [SceneView.cameraBuilder].
 class OrbitCameraController {
   OrbitCameraController({
     Vector3? target,
@@ -31,11 +31,63 @@ class OrbitCameraController {
   static const double maxPitch = math.pi / 2 - 0.08;
   static const double orbitSensitivity = 0.005;
   static const double scrollZoomSensitivity = 0.01;
+  // How many world units the target moves per pixel of pan drag at distance 1.
+  // Scaled by [distance] so pan feels the same at any zoom level.
+  static const double panSensitivity = 0.0015;
 
   /// Rotates the camera around [target] from drag deltas in logical pixels.
+  ///
+  /// Use for one-finger / primary-button drags. Example: after a finger moves
+  /// 40px right, call `orbit(40, 0)` to yaw around the look-at point.
   void orbit(double deltaX, double deltaY) {
     yaw += deltaX * orbitSensitivity;
     pitch = (pitch + deltaY * orbitSensitivity).clamp(minPitch, maxPitch);
+  }
+
+  /// Slides [target] in camera-local screen space so the view moves left/right
+  /// and up/down without changing yaw, pitch, or distance.
+  ///
+  /// Useful when the user wants to inspect props that are not at the origin —
+  /// e.g. the cut sheet parked beside the glued coffin. Positive [deltaX] pans
+  /// the scene to the right (camera target moves left in world space along the
+  /// camera's right axis); positive [deltaY] pans the scene down.
+  ///
+  /// Example:
+  /// ```dart
+  /// // Two-finger drag moved 12px right and 8px up on screen.
+  /// camera.pan(12, -8);
+  /// ```
+  void pan(double deltaX, double deltaY) {
+    // Build the same look direction used by [_buildCamera] so pan axes stay
+    // locked to what the user currently sees on screen.
+    final cosPitch = math.cos(pitch);
+    final sinPitch = math.sin(pitch);
+    final forward = Vector3(
+      cosPitch * math.sin(yaw),
+      sinPitch,
+      cosPitch * math.cos(yaw),
+    )..normalize();
+
+    // Right = worldUp × forward; if looking nearly straight up/down this can
+    // collapse, so fall back to a yaw-only right vector.
+    final worldUp = Vector3(0, 1, 0);
+    var right = worldUp.cross(forward);
+    if (right.length2 < 1e-8) {
+      right = Vector3(math.cos(yaw), 0, -math.sin(yaw));
+    } else {
+      right.normalize();
+    }
+
+    // Screen-up is perpendicular to both forward and right (not always world Y),
+    // so vertical pan stays aligned with the image even when pitched.
+    final screenUp = forward.cross(right)..normalize();
+
+    // Scale by distance so a 100px drag covers a similar on-screen fraction
+    // whether zoomed in close or pulled far back.
+    final scale = distance * panSensitivity;
+    // Invert X so dragging right moves the view content right (target left).
+    target.add(right * (-deltaX * scale));
+    target.add(screenUp * (deltaY * scale));
   }
 
   /// Zooms from a mouse/trackpad scroll delta at [screenPoint].

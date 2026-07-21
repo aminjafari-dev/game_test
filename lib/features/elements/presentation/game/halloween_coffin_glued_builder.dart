@@ -20,10 +20,69 @@ import 'package:vector_math/vector_math.dart';
 /// world.add(glued.root);
 /// ```
 class HalloweenCoffinGlued {
-  HalloweenCoffinGlued({required this.root});
+  HalloweenCoffinGlued({
+    required this.root,
+    required this.leftHingeNode,
+    required this.rightHingeNode,
+    required this.leftHingePosition,
+    required this.rightHingePosition,
+    required this.openAngle,
+  });
 
   /// Scene-graph parent that contains every glued piece of the coffin.
   final Node root;
+  final Node leftHingeNode;
+  final Node rightHingeNode;
+  final Vector3 leftHingePosition;
+  final Vector3 rightHingePosition;
+  final double openAngle;
+
+  static const double _animationSpeed = 3.5;
+  static const double _angleEpsilon = 0.01;
+
+  double _currentAngle = 0;
+  double _targetAngle = 0;
+
+  bool get isOpen => _targetAngle > 0;
+  bool get isFullyOpen => (_currentAngle - openAngle).abs() < _angleEpsilon;
+  bool get isFullyClosed => _currentAngle.abs() < _angleEpsilon;
+
+  void setOpen(bool open) {
+    _targetAngle = open ? openAngle : 0;
+  }
+
+  void toggle() => setOpen(!isOpen);
+
+  bool get isAnimating =>
+      (_currentAngle - _targetAngle).abs() >= _angleEpsilon;
+
+  bool containsNode(Node node) {
+    Node? current = node;
+    while (current != null) {
+      if (current == root) return true;
+      current = current.parent;
+    }
+    return false;
+  }
+
+  void tick(double dt) {
+    if ((_currentAngle - _targetAngle).abs() < _angleEpsilon) {
+      _currentAngle = _targetAngle;
+    } else {
+      final step = _animationSpeed * dt;
+      if (_currentAngle < _targetAngle) {
+        _currentAngle = math.min(_currentAngle + step, _targetAngle);
+      } else {
+        _currentAngle = math.max(_currentAngle - step, _targetAngle);
+      }
+    }
+
+    leftHingeNode.localTransform = Matrix4.translation(leftHingePosition)
+      ..rotateZ(_currentAngle);
+
+    rightHingeNode.localTransform = Matrix4.translation(rightHingePosition)
+      ..rotateZ(-_currentAngle);
+  }
 }
 
 /// Folds the exact same cut-sheet pieces from [HalloweenCoffinTemplateSpec] up
@@ -50,6 +109,9 @@ class HalloweenCoffinGlued {
 /// ```
 class HalloweenCoffinGluedBuilder {
   HalloweenCoffinGluedBuilder._();
+
+  /// How far each lid half swings open (radians), matching [CoffinProp].
+  static const double _openAngle = 2;
 
   /// Builds the assembled coffin from the shared template pieces.
   ///
@@ -83,10 +145,36 @@ class HalloweenCoffinGluedBuilder {
       root.add(_buildStandingWall(edge, wood));
     }
 
-    // 3) The two lid halves close on top of the walls to seal the coffin.
-    root.add(_buildLid(wood));
+    // 3) The two lid halves hinge on the outer head edges and swing open on tap,
+    //    exactly like the procedural [CoffinProp] in the center of the scene.
+    final scale = HalloweenCoffinTemplateSpec.inchesToWorld;
+    final wallDepthWorld = HalloweenCoffinTemplateSpec.wallDepthIn * scale;
+    final lidY = wallDepthWorld +
+        HalloweenCoffinTemplateSpec.pieceHalfThicknessWorld;
+    final headHalfWidthWorld =
+        HalloweenCoffinTemplateSpec.topHalfWidthIn * scale;
 
-    return HalloweenCoffinGlued(root: root);
+    final leftHingePosition = Vector3(-headHalfWidthWorld, lidY, 0);
+    final rightHingePosition = Vector3(headHalfWidthWorld, lidY, 0);
+
+    final leftHingeNode = Node(name: 'glued_hinge_left');
+    leftHingeNode.localTransform = Matrix4.translation(leftHingePosition);
+    root.add(leftHingeNode);
+    leftHingeNode.add(_buildLeftDoor(wood, headHalfWidthWorld));
+
+    final rightHingeNode = Node(name: 'glued_hinge_right');
+    rightHingeNode.localTransform = Matrix4.translation(rightHingePosition);
+    root.add(rightHingeNode);
+    rightHingeNode.add(_buildRightDoor(wood, headHalfWidthWorld));
+
+    return HalloweenCoffinGlued(
+      root: root,
+      leftHingeNode: leftHingeNode,
+      rightHingeNode: rightHingeNode,
+      leftHingePosition: leftHingePosition,
+      rightHingePosition: rightHingePosition,
+      openAngle: _openAngle,
+    );
   }
 
   /// Builds the flat hexagonal floor panel using the shared base vertices.
@@ -174,51 +262,43 @@ class HalloweenCoffinGluedBuilder {
     );
   }
 
-  /// Builds the closed lid from the two door halves resting on the walls.
-  ///
-  /// Both door polygons are already expressed in base-hexagon coordinates, so
-  /// laying them flat at wall-top height reconstructs the full hexagon lid with
-  /// the seam running down the center — exactly the split-lid shape we cut.
-  static Node _buildLid(UnlitMaterial material) {
+  /// Builds the left lid half, offset from its hinge so the outer head edge
+  /// sits on the hinge pivot (same layout trick as [CoffinBuilder._buildLeftLid]).
+  static Node _buildLeftDoor(UnlitMaterial material, double headHalfWidthWorld) {
     final scale = HalloweenCoffinTemplateSpec.inchesToWorld;
-    final wallDepthWorld = HalloweenCoffinTemplateSpec.wallDepthIn * scale;
     final thicknessWorld = HalloweenCoffinTemplateSpec.pieceThicknessWorld;
 
-    // Sit the lid on top of the walls; its thickness is centered, so add half
-    // the thickness to keep it resting flush on the wall rim.
-    final lidY = wallDepthWorld +
-        HalloweenCoffinTemplateSpec.pieceHalfThicknessWorld;
-
-    final lid = Node(
-      name: 'glued_lid',
-      localTransform: Matrix4.translation(Vector3(0, lidY, 0)),
-    );
-
-    lid.add(
-      Node(
-        name: 'glued_left_door',
-        mesh: CoffinGeometry.flatPolygonMesh(
-          HalloweenCoffinTemplateSpec.leftDoorVerticesIn,
-          material,
-          unitToWorld: scale,
-          thicknessWorld: thicknessWorld,
-        ),
+    return Node(
+      name: 'glued_left_door',
+      // Shift the mesh so x = -headHalfWidth (outer edge) aligns with the hinge.
+      localTransform: Matrix4.translation(Vector3(headHalfWidthWorld, 0, 0)),
+      mesh: CoffinGeometry.flatPolygonMesh(
+        HalloweenCoffinTemplateSpec.leftDoorVerticesIn,
+        material,
+        unitToWorld: scale,
+        thicknessWorld: thicknessWorld,
       ),
     );
+  }
 
-    lid.add(
-      Node(
-        name: 'glued_right_door',
-        mesh: CoffinGeometry.flatPolygonMesh(
-          HalloweenCoffinTemplateSpec.rightDoorVerticesIn,
-          material,
-          unitToWorld: scale,
-          thicknessWorld: thicknessWorld,
-        ),
+  /// Builds the right lid half, mirrored from [_buildLeftDoor].
+  static Node _buildRightDoor(
+    UnlitMaterial material,
+    double headHalfWidthWorld,
+  ) {
+    final scale = HalloweenCoffinTemplateSpec.inchesToWorld;
+    final thicknessWorld = HalloweenCoffinTemplateSpec.pieceThicknessWorld;
+
+    return Node(
+      name: 'glued_right_door',
+      localTransform: Matrix4.translation(Vector3(-headHalfWidthWorld, 0, 0)),
+      mesh: CoffinGeometry.flatPolygonMesh(
+        HalloweenCoffinTemplateSpec.rightDoorVerticesIn,
+        material,
+        unitToWorld: scale,
+        thicknessWorld: thicknessWorld,
       ),
     );
-
-    return lid;
   }
 
   /// Returns the six hexagon edges paired with the wall piece that folds up on
