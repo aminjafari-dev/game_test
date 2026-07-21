@@ -89,10 +89,13 @@ class _ElementsPageState extends State<ElementsPage> {
     final woodTexture = await gpuTextureFromAsset(ImagePath.halloweenCoffinWood);
     final woodMaterial = HorrorMaterials.coffinTextured(woodTexture);
 
+    // Keep the older procedural coffin off to the side so the upright glued
+    // Halloween coffin can own the middle of the workshop ground plane.
     final coffin = CoffinBuilder.build(
       woodMaterial: woodMaterial,
       texturedWood: true,
     );
+    coffin.root.localTransform = Matrix4.translation(Vector3(-3.5, 0, 0));
     world.add(coffin.root);
 
     final cutSheet = HalloweenCoffinPiecesBuilder.buildFlatCutSheet(
@@ -101,11 +104,13 @@ class _ElementsPageState extends State<ElementsPage> {
     );
     world.add(cutSheet.root);
 
-    // Glue the exact same template pieces together into an assembled coffin and
-    // park it next to the flat cut sheet for a side-by-side comparison.
+    // Glue the template pieces into an assembled coffin and stand it upright
+    // in the middle of the area (foot on the ground, head pointing up).
     final gluedCoffin = HalloweenCoffinGluedBuilder.build(
       material: woodMaterial,
       baseMaterial: HorrorMaterials.coffinBaseBlack(),
+      offset: Vector3.zero(),
+      upright: true,
     );
     world.add(gluedCoffin.root);
 

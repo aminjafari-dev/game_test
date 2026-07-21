@@ -16,6 +16,7 @@ import 'package:vector_math/vector_math.dart';
 /// ```dart
 /// final glued = HalloweenCoffinGluedBuilder.build(
 ///   material: HorrorMaterials.coffinWood(),
+///   upright: true,
 /// );
 /// world.add(glued.root);
 /// ```
@@ -100,10 +101,12 @@ class HalloweenCoffinGlued {
 ///
 /// Example:
 /// ```dart
+/// // Standing upright in the middle of the Elements workshop:
 /// final glued = HalloweenCoffinGluedBuilder.build(
 ///   material: woodMaterial,
 ///   baseMaterial: HorrorMaterials.coffinBaseBlack(),
-///   offset: Vector3(4, 0, -3),
+///   offset: Vector3.zero(),
+///   upright: true,
 /// );
 /// world.add(glued.root);
 /// ```
@@ -117,22 +120,28 @@ class HalloweenCoffinGluedBuilder {
   ///
   /// [material] paints the walls, base, and lid (defaults to coffin wood).
   /// [baseMaterial] paints only the hexagonal floor panel (defaults to black).
-  /// [offset] positions the whole prop in world space so it can sit next to the
-  /// flat cut sheet without overlapping it.
+  /// [offset] positions the whole prop in world space (defaults to the origin so
+  /// it sits in the middle of the Elements ground plane).
+  /// [upright] when true, stands the coffin on its foot with the head pointing
+  /// up — useful for a centerpiece preview instead of the burial pose.
   static HalloweenCoffinGlued build({
     UnlitMaterial? material,
     UnlitMaterial? baseMaterial,
     Vector3? offset,
+    bool upright = false,
   }) {
     final wood = material ?? HorrorMaterials.coffinWood();
     final base = baseMaterial ?? HorrorMaterials.coffinBaseBlack();
     final root = Node(name: 'halloween_coffin_glued');
 
-    // Park the assembled coffin beside the flat cut sheet by default so the two
-    // versions can be compared side by side.
-    final worldOffset = offset ??
-        Vector3(HalloweenCoffinTemplateSpec.cutSheetOffsetX, 0, -3.0);
-    root.localTransform = Matrix4.translation(worldOffset);
+    // Place the prop at the requested world offset (middle of the area by
+    // default). When [upright] is set, tip it onto its foot so the long axis
+    // runs vertically instead of lying flat on the ground.
+    final worldOffset = offset ?? Vector3.zero();
+    root.localTransform = _rootTransform(
+      offset: worldOffset,
+      upright: upright,
+    );
 
     // 1) The hexagonal floor sits flat on the ground, exactly like the cut-sheet
     //    base piece (same vertices, same thickness, same material).
@@ -175,6 +184,37 @@ class HalloweenCoffinGluedBuilder {
       rightHingePosition: rightHingePosition,
       openAngle: _openAngle,
     );
+  }
+
+  /// Builds the root-node transform for [offset] and optional upright pose.
+  ///
+  /// Lying pose (default): only translate by [offset] so the hexagonal base
+  /// rests on the ground. Upright pose: rotate +90° around X so the foot edge
+  /// becomes the contact with the ground and the head points skyward, then
+  /// lift by the coffin length so the foot sits at y = 0 instead of sinking
+  /// underground.
+  ///
+  /// Example — centerpiece standing in the Elements workshop:
+  /// ```dart
+  /// _rootTransform(offset: Vector3.zero(), upright: true);
+  /// ```
+  static Matrix4 _rootTransform({
+    required Vector3 offset,
+    required bool upright,
+  }) {
+    if (!upright) {
+      return Matrix4.translation(offset);
+    }
+
+    // Template length along local Z becomes world height after rotateX(π/2).
+    final lengthWorld = HalloweenCoffinTemplateSpec.baseHeightIn *
+        HalloweenCoffinTemplateSpec.inchesToWorld;
+
+    // rotateX(π/2) maps local (x, y, z) → (x, −z, y). The foot at z = length
+    // would land at y = −length, so we lift by lengthWorld first via the
+    // translation that multiplies after the rotation.
+    return Matrix4.translation(offset + Vector3(0, lengthWorld, 0))
+      ..rotateX(math.pi / 2);
   }
 
   /// Builds the flat hexagonal floor panel using the shared base vertices.

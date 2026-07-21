@@ -15,7 +15,9 @@ class OrbitCameraController {
     double? yaw,
     double? pitch,
     double? distance,
-  })  : target = target ?? Vector3(0, 0.25, 0),
+  // Default look-at sits about halfway up the upright Halloween coffin so the
+  // standing centerpiece fills the Elements workshop view on first load.
+  })  : target = target ?? Vector3(0, 1.0, 0),
         yaw = yaw ?? math.pi / 4,
         pitch = pitch ?? 0.33,
         distance = distance ?? 4.2;
