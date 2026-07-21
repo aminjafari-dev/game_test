@@ -16,15 +16,22 @@ import 'package:vector_math/vector_math.dart';
 
 /// Workshop screen for building and previewing reusable game elements.
 ///
-/// Drag or two-finger scroll to pan (left/right/up/down), two-finger drag or
-/// right-drag to orbit, pinch or Ctrl/Cmd+scroll to zoom, and tap a coffin to
-/// toggle its lid. Opened from [HomeShellPage] when the Elements tab is selected.
+/// One-finger drag pans (left/right/up/down), two-finger drag orbits the camera
+/// angle, pinch zooms, right-drag orbits on desktop, and Ctrl/Cmd+scroll zooms.
+/// Tap a coffin to toggle its lid. Opened from [HomeShellPage] when the Elements
+/// tab is selected.
 class ElementsPage extends StatefulWidget {
   const ElementsPage({super.key});
 
   @override
   State<ElementsPage> createState() => _ElementsPageState();
 }
+
+/// Which camera action owns the current multi-touch / scale gesture.
+///
+/// Locked after the first clear signal so a two-finger swipe cannot flip between
+/// orbit, pinch-zoom, and pan mid-gesture (which felt like all three at once).
+enum _CameraGestureMode { undecided, pan, orbit, pinch }
 
 class _ElementsPageState extends State<ElementsPage> {
   Scene? _scene;
@@ -44,9 +51,14 @@ class _ElementsPageState extends State<ElementsPage> {
   // True while the secondary (right) mouse button is held — drag then orbits.
   bool _rightMouseOrbiting = false;
   Offset? _rightMouseLastPosition;
+  // Once set, the rest of this scale gesture only runs that one camera action.
+  _CameraGestureMode _gestureMode = _CameraGestureMode.undecided;
   static const double _tapSlop = 12;
-  // Treat scale as "not pinching" below this so two-finger drags can pan/orbit.
-  static const double _pinchScaleEpsilon = 0.01;
+  // Finger spacing naturally jitters during a two-finger swipe; require a clear
+  // pinch (~8%) before committing to zoom instead of orbit.
+  static const double _pinchScaleEpsilon = 0.08;
+  // How far the focal point must move (px) before we lock two fingers to orbit.
+  static const double _orbitCommitSlop = 6;
 
   @override
   void initState() {
@@ -154,13 +166,18 @@ class _ElementsPageState extends State<ElementsPage> {
     _pinchStartDistance = _camera.distance;
     // Snapshot the orbit target so pinch zoom can keep the focal point anchored.
     _pinchStartTarget = _camera.target.clone();
+    // Fresh gesture — wait for a clear pinch vs swipe before applying motion.
+    _gestureMode = _CameraGestureMode.undecided;
   }
 
   /// Applies pan / orbit / pinch from a [GestureDetector] scale update.
   ///
-  /// One finger pans so the user can freely move left/right/up/down through the
-  /// workshop. Two fingers orbit (when not pinching). A real pinch (scale away
-  /// from 1) zooms toward the focal point. Call this from [onScaleUpdate].
+  /// One finger pans. Two fingers either orbit (swipe) or zoom (pinch) — never
+  /// both in the same gesture, and never pan. Call from [onScaleUpdate].
+  ///
+  /// Example: a two-finger swipe locks to [_CameraGestureMode.orbit] after a few
+  /// pixels so finger-spacing jitter cannot also fire pinch zoom (which would
+  /// dolly the target and feel like left/right + zoom).
   void _onScaleUpdate(ScaleUpdateDetails details) {
     _lastFocalPoint = details.localFocalPoint;
 
@@ -168,33 +185,68 @@ class _ElementsPageState extends State<ElementsPage> {
     // updates for that gesture so we do not pan and orbit at the same time.
     if (_rightMouseOrbiting) return;
 
-    final isPinching =
-        (details.scale - 1.0).abs() > _pinchScaleEpsilon;
-
-    // A meaningful scale change means the user is pinching — zoom and skip
-    // pan/orbit so the focal point stays anchored without fighting translation.
-    if (isPinching) {
-      _camera.zoomFromPinchAt(
-        startDistance: _pinchStartDistance,
-        scale: details.scale,
-        startTarget: _pinchStartTarget,
-        focalPoint: details.localFocalPoint,
-        viewSize: _viewSize,
-      );
-      setState(() {});
-      return;
+    // Decide once per gesture which camera action owns the pointers.
+    if (_gestureMode == _CameraGestureMode.undecided) {
+      _gestureMode = _resolveGestureMode(details);
     }
 
-    if (details.focalPointDelta == Offset.zero) return;
+    switch (_gestureMode) {
+      case _CameraGestureMode.undecided:
+        // Still waiting for a clear pinch or swipe — do nothing yet.
+        return;
+      case _CameraGestureMode.pinch:
+        // Anchored zoom only; skip orbit/pan for the rest of this gesture.
+        _camera.zoomFromPinchAt(
+          startDistance: _pinchStartDistance,
+          scale: details.scale,
+          startTarget: _pinchStartTarget,
+          focalPoint: details.localFocalPoint,
+          viewSize: _viewSize,
+        );
+        setState(() {});
+        return;
+      case _CameraGestureMode.orbit:
+        if (details.focalPointDelta == Offset.zero) return;
+        // Two-finger swipe: rotate only — ignore scale jitter entirely.
+        _camera.orbit(details.focalPointDelta.dx, details.focalPointDelta.dy);
+        setState(() {});
+        return;
+      case _CameraGestureMode.pan:
+        if (details.focalPointDelta == Offset.zero) return;
+        _camera.pan(details.focalPointDelta.dx, details.focalPointDelta.dy);
+        setState(() {});
+        return;
+    }
+  }
 
-    // Two-finger drag rotates around the look-at point; one-finger drag slides
-    // the look-at point so the camera can travel anywhere in the scene.
+  /// Picks pan, orbit, or pinch from the first clear signal of this gesture.
+  ///
+  /// Useful so a two-finger swipe that slightly changes finger spacing does not
+  /// also zoom: pinch must exceed [_pinchScaleEpsilon] before orbit commit, and
+  /// once orbit wins, scale is ignored until fingers lift.
+  _CameraGestureMode _resolveGestureMode(ScaleUpdateDetails details) {
+    final scaleDelta = (details.scale - 1.0).abs();
+
+    // Two or more fingers: pinch wins only on a clear scale change; otherwise a
+    // focal-point swipe commits to orbit (camera angle) and stays there.
     if (details.pointerCount >= 2) {
-      _camera.orbit(details.focalPointDelta.dx, details.focalPointDelta.dy);
-    } else {
-      _camera.pan(details.focalPointDelta.dx, details.focalPointDelta.dy);
+      if (scaleDelta > _pinchScaleEpsilon) {
+        return _CameraGestureMode.pinch;
+      }
+      if (details.focalPointDelta.distance >= _orbitCommitSlop) {
+        return _CameraGestureMode.orbit;
+      }
+      // Accumulate from gesture start so slow swipes still lock to orbit.
+      final start = _gestureStart;
+      if (start != null &&
+          (details.localFocalPoint - start).distance >= _orbitCommitSlop) {
+        return _CameraGestureMode.orbit;
+      }
+      return _CameraGestureMode.undecided;
     }
-    setState(() {});
+
+    // Single finger always pans the look-at point through the workshop.
+    return _CameraGestureMode.pan;
   }
 
   @override
@@ -289,6 +341,7 @@ class _ElementsPageState extends State<ElementsPage> {
                 final end = _lastFocalPoint;
                 _gestureStart = null;
                 _lastFocalPoint = null;
+                _gestureMode = _CameraGestureMode.undecided;
                 if (start != null &&
                     end != null &&
                     (end - start).distance <= _tapSlop) {
